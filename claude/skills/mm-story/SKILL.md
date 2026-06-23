@@ -60,79 +60,80 @@ MM-Epic-[N] exists. What would you like to do?
 
 ## --help: MM STORY GUIDE
 
-```
+When `--help` is detected, print the following guide in full. Do not summarize or shorten it.
+
+---
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+**MM STORY — COMPLETE GUIDE**  
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MM STORY — COMPLETE GUIDE
+
+**CREATING STORIES**
+
+    /mm-story                            Create a new epic from scratch
+    /mm-story --add MM-Epic-5            Add a new story to an existing epic
+    /mm-story --edit MM-Epic-5-Story-3A  Edit a story (only before pipeline starts)
+
+    Tip: Enrich the Knowledge Base first for better stories:
+      /mm-enrich --help
+
+**CHECKING A STORY**
+
+    /mm-story --review MM-Epic-5 MM-Epic-5-Story-3A
+      Run the Sr. PM Sign-Off Checklist (read-only, no git ops).
+      Use this to self-check before submitting.
+
+      Checks:
+        ✓ "So What?" test — business value in 2 sentences
+        ✓ Story fits in <48 hours
+        ✓ No dependency on unshipped work
+        ✓ AI Acceleration Strategy with real sample data
+        ✓ No hidden context or unexplained acronyms
+        ✓ Demo Gate: named person + specific dataset + number
+
+**UNDERSTANDING GAPS**
+
+    /mm-story --check-gap MM-Epic-5 MM-Epic-5-Story-3A
+      Explains the GAP-REPORT.md in plain English.
+      Works whether the gap came from submission (Phase 1)
+      or from blueprinting (Phase 2).
+      Offers to apply fixes one at a time.
+
+**SUBMITTING TO THE PIPELINE**
+
+    /mm-story --submit MM-Epic-5 MM-Epic-5-Story-3A
+      Phase 1 formal gate. Creates the feature branch,
+      validates the story, and either:
+        PASS → developer can run /mm-blueprint
+        FAIL → GAP-REPORT.md pushed to feature branch
+
+      After submission, the developer runs /mm-blueprint
+      (generates PLAN.md — you don't need to do anything for this step)
+
+**AFTER THE PR IS RAISED**
+
+    PM approves Section 1:        /mm-approve-plan --pm MM-Epic-5 MM-Epic-5-Story-3A
+    Tech Lead approves Section 2: /mm-approve-plan --tech MM-Epic-5 MM-Epic-5-Story-3A
+
+    If reviewers leave comments on your story:
+      /mm-story --revise MM-Epic-5 MM-Epic-5-Story-3A
+      (reads PR comments, updates story, re-requests review)
+
+**THE FULL PM FLOW**
+
+    1. /mm-enrich --help           ← build KB first (one-time setup)
+    2. /mm-story                   ← write the epic + stories
+    3. /mm-story --review ...      ← self-check
+    4. /mm-story --submit ...      ← formal submission
+    5. Gaps? /mm-story --check-gap ...  ← understand and fix
+    6. Re-submit: /mm-story --submit ...
+    7. Developer runs /mm-blueprint (nothing for you to do here)
+    8. /mm-approve-plan --pm ...   ← approve Section 1 of PLAN.md
+    9. After merge → developer handles Phases 3–8
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+Questions? Ask Claude in plain English — it will route to the right mode.  
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CREATING STORIES
-────────────────
-  /mm-story                          Create a new epic from scratch
-  /mm-story --add MM-Epic-5          Add a new story to an existing epic
-  /mm-story --edit MM-Epic-5-Story-3A  Edit a story (only before pipeline starts)
-
-  Tip: Enrich the Knowledge Base first for better stories:
-    /mm-enrich --help
-
-CHECKING A STORY
-────────────────
-  /mm-story --review MM-Epic-5 MM-Epic-5-Story-3A
-    Run the Sr. PM Sign-Off Checklist (read-only, no git ops).
-    Use this to self-check before submitting.
-
-    Checks:
-      ✓ "So What?" test (business value in 2 sentences)
-      ✓ Story fits in <48 hours
-      ✓ No dependency on unshipped work
-      ✓ AI Acceleration Strategy with real sample data
-      ✓ No hidden context or unexplained acronyms
-      ✓ Demo Gate with named person, dataset, and number
-
-UNDERSTANDING GAPS
-──────────────────
-  /mm-story --check-gap MM-Epic-5 MM-Epic-5-Story-3A
-    Explains the GAP-REPORT.md in plain English.
-    Works whether the gap was found during submission (Phase 1)
-    or during blueprinting (Phase 2).
-    Offers to apply fixes one at a time.
-
-SUBMITTING TO THE PIPELINE
-──────────────────────────
-  /mm-story --submit MM-Epic-5 MM-Epic-5-Story-3A
-    Phase 1 formal gate. Creates the feature branch,
-    validates the story, and either:
-      PASS → developer can run /mm-blueprint
-      FAIL → GAP-REPORT.md pushed to feature branch
-
-  After submission, the developer runs:
-    /mm-blueprint MM-Epic-5 MM-Epic-5-Story-3A
-    (generates PLAN.md — you don't need to do anything for this step)
-
-AFTER THE PR IS RAISED
-──────────────────────
-  PM approves Section 1:       /mm-approve-plan --pm MM-Epic-5 MM-Epic-5-Story-3A
-  Tech Lead approves Section 2: /mm-approve-plan --tech MM-Epic-5 MM-Epic-5-Story-3A
-
-  If reviewers leave comments on your story:
-    /mm-story --revise MM-Epic-5 MM-Epic-5-Story-3A
-    (reads PR comments, updates story, re-requests review)
-
-THE FULL PM FLOW
-────────────────
-  1. /mm-enrich --help          ← build KB first (one-time setup)
-  2. /mm-story                  ← write the epic + stories
-  3. /mm-story --review ...     ← self-check
-  4. /mm-story --submit ...     ← formal submission
-  5. Gaps? /mm-story --check-gap ...  ← understand and fix
-  6. Re-submit: /mm-story --submit ...
-  7. Developer runs /mm-blueprint (you don't need to do this)
-  8. /mm-approve-plan --pm ...  ← approve Section 1 of PLAN.md
-  9. After merge → developer handles Phases 3–8
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Questions? Ask Claude in plain English — it will route to the right mode.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
 
 ---
 
