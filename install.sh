@@ -3,12 +3,18 @@
 # InCred AI — Claude Code Skills & Agents Installer
 # Repo: https://github.com/aryan-incred/incred-ai
 #
-# Usage:
-#   curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash
-#   curl -fsSL ... | bash -s -- --preset story
-#   curl -fsSL ... | bash -s -- --skill mm-story,mm-enrich --agent mm-enricher
-#   curl -fsSL ... | bash -s -- --preset all --update
-#   curl -fsSL ... | bash -s -- --list
+# Usage (private repo — token required):
+#   export INCRED_AI_TOKEN=ghp_xxxx   # set once in ~/.zshrc to avoid repeating
+#
+#   curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
+#     https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash
+#
+#   With flags:
+#   curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
+#     https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset story
+#
+#   Or pass token inline:
+#   ... | bash -s -- --preset story --token ghp_xxxx
 # ──────────────────────────────────────────────────────────────────────────────
 set -e
 
@@ -16,6 +22,7 @@ REPO_RAW="https://raw.githubusercontent.com/aryan-incred/incred-ai/main/claude"
 SKILLS_DIR="$HOME/.claude/skills"
 AGENTS_DIR="$HOME/.claude/agents"
 FORCE_UPDATE=false
+GITHUB_TOKEN="${INCRED_AI_TOKEN:-}"  # read from env var if set
 
 # ── Preset definitions ────────────────────────────────────────────────────────
 # story  = MM PMs only (no engineering tools)
@@ -41,7 +48,7 @@ install_skill() {
     # Already installed — fetch remote to check if update is available
     local tmp
     tmp=$(mktemp)
-    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$tmp" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/skills/$name/SKILL.md" -o "$tmp" 2>/dev/null; then
       if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
         echo "  ✓ skill: $name  (already up to date)"
       else
@@ -61,7 +68,7 @@ install_skill() {
     rm -f "$tmp"
   else
     # Fresh install or --update flag set
-    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$dest" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/skills/$name/SKILL.md" -o "$dest" 2>/dev/null; then
       if [[ "$FORCE_UPDATE" == "true" ]]; then
         echo "  ✅ skill: $name  (updated)"
       else
@@ -82,7 +89,7 @@ install_agent() {
   if [[ -f "$dest" && "$FORCE_UPDATE" == "false" ]]; then
     local tmp
     tmp=$(mktemp)
-    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$tmp" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/agents/$name.md" -o "$tmp" 2>/dev/null; then
       if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
         echo "  ✓ agent: @$name  (already up to date)"
       else
@@ -100,7 +107,7 @@ install_agent() {
     fi
     rm -f "$tmp"
   else
-    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$dest" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/agents/$name.md" -o "$dest" 2>/dev/null; then
       if [[ "$FORCE_UPDATE" == "true" ]]; then
         echo "  ✅ agent: @$name  (updated)"
       else
@@ -164,6 +171,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --preset)
       PRESET="$2"
+      shift 2
+      ;;
+    --token)
+      GITHUB_TOKEN="$2"
       shift 2
       ;;
     --update)
@@ -248,7 +259,7 @@ install_skill_progress() {
 
   if [[ -f "$dest" && "$FORCE_UPDATE" == "false" ]]; then
     local tmp; tmp=$(mktemp)
-    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$tmp" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/skills/$name/SKILL.md" -o "$tmp" 2>/dev/null; then
       if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
         SKIPPED=$(( SKIPPED + 1 ))
       else
@@ -267,7 +278,7 @@ install_skill_progress() {
     fi
     rm -f "$tmp"
   else
-    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$dest" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/skills/$name/SKILL.md" -o "$dest" 2>/dev/null; then
       INSTALLED=$(( INSTALLED + 1 ))
     else
       printf "\r  ❌ skill: %-28s not found in repo\n" "$name"
@@ -287,7 +298,7 @@ install_agent_progress() {
 
   if [[ -f "$dest" && "$FORCE_UPDATE" == "false" ]]; then
     local tmp; tmp=$(mktemp)
-    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$tmp" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/agents/$name.md" -o "$tmp" 2>/dev/null; then
       if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
         SKIPPED=$(( SKIPPED + 1 ))
       else
@@ -306,7 +317,7 @@ install_agent_progress() {
     fi
     rm -f "$tmp"
   else
-    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$dest" 2>/dev/null; then
+    if curl -fsSL ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$REPO_RAW/agents/$name.md" -o "$dest" 2>/dev/null; then
       INSTALLED=$(( INSTALLED + 1 ))
     else
       printf "\r  ❌ agent: %-28s not found in repo\n" "@$name"
@@ -317,6 +328,23 @@ install_agent_progress() {
 
 # ── Install / update ──────────────────────────────────────────────────────────
 TOTAL=$(( ${#SKILLS_TO_INSTALL[@]} + ${#AGENTS_TO_INSTALL[@]} ))
+
+# ── Token check ───────────────────────────────────────────────────────────────
+if [[ -z "$GITHUB_TOKEN" ]]; then
+  echo ""
+  echo "⚠️  No GitHub token found."
+  echo "   This repo is private — installs will fail without a token."
+  echo ""
+  echo "   Fix (add to ~/.zshrc or ~/.bashrc):"
+  echo "     export INCRED_AI_TOKEN=ghp_xxxx"
+  echo ""
+  echo "   Or pass inline:"
+  echo "     bash install.sh --preset story --token ghp_xxxx"
+  echo ""
+  echo "   Ask Aryan for the read-only token."
+  echo ""
+  exit 1
+fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
