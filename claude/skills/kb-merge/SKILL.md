@@ -205,14 +205,27 @@ _Last updated: <date> | Services: <N> of 10 explored | Total endpoints: <count>_
 
 ### 2.3 `integrations.md`
 
-The most important file for `/generate-pr` impact analysis. File: `MM/Knowledge_Base/integrations.md`
+The most important file for `/generate-pr` impact analysis. Also contains a PM-safe overview section used by mm-story. File: `MM/Knowledge_Base/integrations.md`
 
 ```markdown
 # MM — Integration Map
 
 _Last updated: <date> | Built from <N> explored services_
 
-> **Primary use**: When changing a service, check this file to find all downstream consumers before writing code.
+## Service Connections (PM Overview)
+
+_Which services talk to each other and why — business context only. mm-story reads this section._
+
+| Service | Calls | Why |
+|---------|-------|-----|
+<rows: for each internal integration, one plain-English row:
+ e.g. "paymentservice → Janus Gateway | Routes all external payments to bank APIs"
+ e.g. "lms-connector-service → paymentservice | Triggers disbursement after loan approval"
+ No HTTP methods, no auth tokens, no requestTypes here>
+
+---
+
+> **Dev section below — mm-blueprint and /generate-pr only.**
 
 ## Cross-Service Impact Table
 
@@ -318,6 +331,28 @@ _Full profiles: `services/` directory. Full dependency contracts: each repo's `S
 |--------|----------|-----------|
 <list with: cd ~/Incred-Engineers/<folder> && /code-explorer>
 ```
+
+---
+
+### 2.6 Update `Knowledge_Base/INDEX.md`
+
+After writing all files, add rows to `MM/Knowledge_Base/INDEX.md` for everything kb-merge produced.
+
+**Audience tags:**
+- `[PM]` — safe for mm-story to read: business intent, service purposes, which services connect and why
+- `[Dev]` — mm-blueprint and generate-pr only: HTTP contracts, auth, requestTypes, violations
+
+```markdown
+| Service purposes overview | services.md | Which services exist, what each does | [PM] |
+| Service connections (business) | integrations.md#service-connections | Which services talk to which and why | [PM] |
+| API endpoints (all services) | api-registry.md | HTTP method/path/auth for every MM endpoint | [Dev] |
+| Data models & requestTypes | data-models.md | DynamoDB tables, access patterns, requestType registry | [Dev] |
+| Technical integration detail | integrations.md#technical-integration-detail | HTTP methods, Janus routing, auth types | [Dev] |
+| Cross-service impact table | integrations.md#cross-service-impact-table | If I change X, who breaks — for /generate-pr | [Dev] |
+| <service> profile | services/<folder>.md | API table, data resources, violations for <service> | [Dev] |
+```
+
+Add one `[Dev]` row per `services/<folder>.md` written. Preserve existing `[PM]` rows written by mm-enrich — never remove or re-tag them. If a row already exists for a file, update its summary but keep the existing audience tag.
 
 ---
 

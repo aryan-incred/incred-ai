@@ -602,11 +602,20 @@ After all approved entries are written, update `MM/Knowledge_Base/index.md`:
 _Last updated: [ISO 8601 timestamp]_
 
 ## Quick Lookup
-| Topic | File | Summary |
-|-------|------|---------|
-| Payment Status Enum | field-vocabulary.md | INITIATED → PROCESSING → SETTLED → FAILED |
-| NACH Retry Limit | business-rules.md | Max 3 retries per calendar day |
+| Topic | File | Summary | Audience |
+|-------|------|---------|----------|
+| Payment Status Enum | field-vocabulary.md | INITIATED → PROCESSING → SETTLED → FAILED | [PM] |
+| NACH Retry Limit | business-rules.md | Max 3 retries per calendar day | [PM] |
 ```
+
+**Audience tags:**
+- `[PM]` — safe for mm-story: business rules, decisions, field definitions, personas, PRFAQ links. **Default for all mm-enrich entries** — PM-enriched content is always business-level.
+- `[Dev]` — mm-blueprint and generate-pr only: API contracts, requestTypes, data models. Written by /kb-merge, not mm-enrich.
+
+**Rules when updating:**
+- New entries from mm-enrich always get `[PM]`.
+- If a row already exists (written by /kb-merge with `[Dev]`), update its summary but **never change its audience tag**.
+- Never write `[Dev]`-tagged rows from mm-enrich — those belong to /kb-merge.
 
 Add new rows for new entries. Update summary + timestamp for updated entries.
 

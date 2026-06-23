@@ -175,6 +175,7 @@ If missing or empty:
 
 Read in order:
 1. `MM/Knowledge_Base/index.md` — domain facts quick lookup
+   **Audience filter:** only follow links tagged `[PM]`. Skip any row tagged `[Dev]` (those contain API paths, HTTP methods, requestTypes — engineering detail that doesn't belong in stories).
 2. `MM/PRFAQs/` — any PRFAQ this epic traces back to
 3. `MM/Epic_Stories/` — next available Epic number
 
