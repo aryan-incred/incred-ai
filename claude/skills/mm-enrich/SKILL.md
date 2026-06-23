@@ -55,103 +55,95 @@ Role is recorded in ENRICHMENT-LOG.md as the approver. **Role never blocks anyon
 
 ## --help: ENRICHMENT GUIDE
 
-When `--help` flag is passed (or user asks "how do I enrich", "what can I add"), skip all other steps and show this guide:
+When `--help` is detected, print the following guide in full. Do not summarize or shorten it.
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MM KNOWLEDGE ENRICHMENT GUIDE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-WHAT CAN I ENRICH?
-──────────────────
-The MM Knowledge Base (KB) stores operational knowledge — how
-the domain works today. PRFAQs store strategic intent — why
-we're building something new.
-
-  ONE-QUESTION TEST:
-  "Is this about HOW the domain behaves (rules, values, contracts)?
-   Or WHY we're building something new (initiative, customer problem)?"
-  → HOW = Knowledge Base
-  → WHY = PRFAQ
-
-WHERE DOES MY CONTENT GO?
-──────────────────────────
-  business-rules.md     → Rules, limits, thresholds
-                           e.g. "NACH retries: max 3 per calendar day"
-                           e.g. "Minimum payout amount: ₹1"
-
-  field-vocabulary.md   → Enum values, field names, status flows
-                           e.g. "Payment Status: INITIATED → PROCESSING
-                                 → SETTLED → FAILED"
-                           e.g. "Mandate Type: CREATE / REVOKE / UPDATE"
-
-  integrations.md       → External service contracts, API behaviour
-                           e.g. "HDFC NACH max transaction: ₹10L"
-                           e.g. "Janus gateway timeout: 30s"
-
-  product-decisions.md  → Agreed decisions on in-scope work
-                           e.g. "Use NACH over UPI for recurring mandates
-                                 — decided 2026-06-10 by Aryan + Sunil"
-
-  MM/PRFAQs/            → New initiative framing (WHY we're building)
-                           e.g. "PRFAQ for real-time payout dashboard"
-                           e.g. "Initiative: reduce settlement failures by 40%"
-
-  retrospectives/       → Lessons from completed epics
-                           e.g. "Epic 3 slowed by missing NACH enum values
-                                 in KB — add enums before story writing next time"
-
-HOW DO I ENRICH?
-────────────────
-  FROM PASTED TEXT:     /mm-enrich
-                        Paste meeting notes, a decision, or a rule
-                        when prompted
-
-  FROM SLACK:           /mm-enrich --slack [thread-url]
-                        Fetches the thread via Slack MCP
-
-  FROM EMAIL:           /mm-enrich --email [thread-id]
-                        Fetches the thread via Gmail MCP
-
-  FROM A FILE:          /mm-enrich --file [local-path]
-                        Reads a local .md, .txt, or .pdf
-
-  SAVE A DECISION:      /mm-enrich --resolve [Epic_ID] [Story_ID]
-                        Saves a confirmed RESOLVE-IN-PLAN value
-                        from an active story
-
-  CREATE A PRFAQ:       /mm-enrich --prfaq
-                        Guided Working Backwards creation — press release,
-                        named user, FAQs, assigns PRFAQ ID, updates index.
-                        Also: /mm-enrich --prfaq MM-PRFAQ-3  (update existing)
-                              /mm-enrich --prfaq --slack [url]  (pre-fill from thread)
-
-  RETROSPECTIVE:        /mm-enrich --retro [Epic_ID]
-                        Routes to Knowledge_Base/retrospectives/
-
-WHAT HAPPENS AFTER ENRICHMENT?
-───────────────────────────────
-  1. Your content is written to the right KB file
-  2. index.md is updated — mm-story and mm-blueprint read
-     this to find KB context without reading every file
-  3. ENRICHMENT-LOG.md is updated with what was added and by whom
-  4. Changes are committed (you approve before anything is pushed)
-
-TIPS FOR GOOD ENRICHMENT
-─────────────────────────
-  • Enrich BEFORE writing stories — a richer KB means fewer
-    RESOLVE-IN-PLAN blockers mid-story
-  • After vendor meetings: /mm-enrich --slack or --email
-    immediately while context is fresh
-  • After sprint retro: /mm-enrich --retro [Epic_ID]
-  • When in doubt about WHERE something goes, just paste it
-    and mm-enrich will classify and route for your approval
+---
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Ready to enrich? Tell me what you have, or use one of the
-flags above to get started.
+**MM KNOWLEDGE ENRICHMENT GUIDE**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+
+**WHAT CAN I ENRICH?**
+
+The MM Knowledge Base (KB) stores operational knowledge — how the domain
+works today. PRFAQs store strategic intent — why we're building something new.
+
+    ONE-QUESTION TEST:
+    "Is this about HOW the domain behaves (rules, values, contracts)?
+     Or WHY we're building something new (initiative, customer problem)?"
+    → HOW = Knowledge Base
+    → WHY = PRFAQ
+
+**WHERE DOES MY CONTENT GO?**
+
+    business-rules.md     → Rules, limits, thresholds
+                             e.g. "NACH retries: max 3 per calendar day"
+                             e.g. "Minimum payout amount: ₹1"
+
+    field-vocabulary.md   → Enum values, field names, status flows
+                             e.g. "Payment Status: INITIATED → PROCESSING → SETTLED → FAILED"
+                             e.g. "Mandate Type: CREATE / REVOKE / UPDATE"
+
+    integrations.md       → External service contracts, API behaviour
+                             e.g. "HDFC NACH max transaction: ₹10L"
+                             e.g. "Janus gateway timeout: 30s"
+
+    product-decisions.md  → Agreed decisions on in-scope work
+                             e.g. "Use NACH over UPI for recurring mandates — decided 2026-06-10"
+
+    MM/PRFAQs/            → New initiative framing (WHY we're building)
+                             → use /mm-enrich --prfaq for guided creation
+
+    retrospectives/       → Lessons from completed epics
+                             e.g. "Epic 3 slowed by missing NACH enums — add upfront next time"
+
+**HOW DO I ENRICH?**
+
+    FROM PASTED TEXT:     /mm-enrich
+                          Paste meeting notes, a decision, or a rule when prompted
+
+    FROM SLACK:           /mm-enrich --slack [thread-url]
+                          Fetches the thread via Slack MCP
+
+    FROM EMAIL:           /mm-enrich --email [thread-id]
+                          Fetches the thread via Gmail MCP
+
+    FROM A FILE:          /mm-enrich --file [local-path]
+                          Reads a local .md, .txt, or .pdf
+
+    SAVE A DECISION:      /mm-enrich --resolve [Epic_ID] [Story_ID]
+                          Saves a confirmed RESOLVE-IN-PLAN value from an active story
+
+    CREATE A PRFAQ:       /mm-enrich --prfaq
+                          Guided Working Backwards creation — press release,
+                          named user, FAQs, assigns PRFAQ ID, updates index.
+                          Update existing:  /mm-enrich --prfaq MM-PRFAQ-3
+                          Pre-fill from Slack: /mm-enrich --prfaq --slack [url]
+
+    RETROSPECTIVE:        /mm-enrich --retro [Epic_ID]
+                          Routes to Knowledge_Base/retrospectives/
+
+**WHAT HAPPENS AFTER ENRICHMENT?**
+
+    1. Your content is written to the right KB file
+    2. INDEX.md is updated — mm-story and mm-blueprint read this to find
+       context without reading every file
+    3. ENRICHMENT-LOG.md is updated with what was added and by whom
+    4. Changes are committed (you approve before anything is pushed)
+
+**TIPS FOR GOOD ENRICHMENT**
+
+    • Enrich BEFORE writing stories — a richer KB means fewer RESOLVE-IN-PLAN blockers
+    • After vendor meetings: /mm-enrich --slack or --email while context is fresh
+    • After sprint retro: /mm-enrich --retro [Epic_ID]
+    • When in doubt about WHERE something goes, just paste it —
+      mm-enrich will classify and route for your approval
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Ready to enrich? Tell me what you have, or use one of the flags above.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+---
 
 After showing --help, wait for user to provide content or a flag. Do not proceed automatically.
 
