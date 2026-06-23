@@ -18,13 +18,16 @@ AGENTS_DIR="$HOME/.claude/agents"
 FORCE_UPDATE=false
 
 # ── Preset definitions ────────────────────────────────────────────────────────
-PRESET_STORY_SKILLS=(mm-story mm-enrich code-explorer)
+# story  = MM PMs only (no engineering tools)
+PRESET_STORY_SKILLS=(mm-story mm-enrich)
 PRESET_STORY_AGENTS=(mm-enricher mm-scoping-analyst mm-pm-reviewer)
 
-PRESET_PIPELINE_SKILLS=(mm-story mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge)
-PRESET_PIPELINE_AGENTS=(mm-scoping-analyst mm-codebase-planner mm-test-architect mm-implementer mm-qa-gatekeeper mm-release-herald mm-tech-reviewer)
+# pipeline = MM developers, Tech Leads, QA (includes mm-story so devs can also review stories)
+PRESET_PIPELINE_SKILLS=(mm-story mm-enrich mm-blueprint mm-approve-plan mm-tdd mm-ship mm-telemetry mm-status)
+PRESET_PIPELINE_AGENTS=(mm-scoping-analyst mm-pm-reviewer mm-tech-reviewer mm-codebase-planner mm-test-architect mm-implementer mm-qa-gatekeeper mm-release-herald)
 
-PRESET_ALL_SKILLS=(mm-story mm-enrich code-explorer mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge claude-publish)
+# all = everything including shared engineering tools
+PRESET_ALL_SKILLS=(mm-story mm-enrich mm-blueprint mm-approve-plan mm-tdd mm-ship mm-telemetry mm-status code-explorer kb-merge claude-publish)
 PRESET_ALL_AGENTS=(mm-enricher mm-scoping-analyst mm-pm-reviewer mm-tech-reviewer mm-codebase-planner mm-test-architect mm-implementer mm-qa-gatekeeper mm-release-herald)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -112,19 +115,20 @@ install_agent() {
 print_list() {
   echo ""
   echo "Available skills:"
-  echo "  Story creation:  mm-story  mm-enrich  code-explorer"
-  echo "  Full pipeline:   mm-story  mm-blueprint  mm-tdd  mm-ship  mm-telemetry  mm-status  mm-approve-plan  kb-merge"
-  echo "  Note: mm-story covers create/review/check-gap/submit/revise in one skill"
+  echo "  MM PM:           mm-story  mm-enrich"
+  echo "  MM Pipeline:     mm-blueprint  mm-approve-plan  mm-tdd  mm-ship  mm-telemetry  mm-status"
+  echo "  Shared (any):    code-explorer  kb-merge  claude-publish"
+  echo "  Note: mm-story covers create/review/check-gap/submit/revise (run /mm-story --help)"
   echo ""
   echo "Available agents:"
-  echo "  Story creation:  mm-enricher  mm-scoping-analyst  mm-pm-reviewer"
-  echo "  Full pipeline:   mm-tech-reviewer  mm-codebase-planner  mm-test-architect"
+  echo "  MM PM:           mm-enricher  mm-scoping-analyst  mm-pm-reviewer"
+  echo "  MM Pipeline:     mm-tech-reviewer  mm-codebase-planner  mm-test-architect"
   echo "                   mm-implementer  mm-qa-gatekeeper  mm-release-herald"
   echo ""
   echo "Presets:"
-  echo "  --preset story     Story creation bundle (6 skills + 3 agents)"
-  echo "  --preset pipeline  Full MM SDLC pipeline (8 skills + 7 agents)"
-  echo "  --preset all       Everything (13 skills + 9 agents)"
+  echo "  --preset story     MM PM bundle: mm-story + mm-enrich + 3 PM agents"
+  echo "  --preset pipeline  MM full pipeline: all skills + 8 agents"
+  echo "  --preset all       Everything including shared engineering tools"
   echo ""
   echo "Flags:"
   echo "  --skill name1,name2    Install specific skills (comma-separated)"
