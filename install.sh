@@ -216,25 +216,143 @@ case "$PRESET" in
     ;;
 esac
 
+# ── Progress bar helper ───────────────────────────────────────────────────────
+TOTAL=0
+CURRENT=0
+INSTALLED=0
+UPDATED=0
+SKIPPED=0
+FAILED=0
+
+progress_bar() {
+  local current="$1"
+  local total="$2"
+  local label="$3"
+  local width=30
+  local filled=$(( current * width / total ))
+  local empty=$(( width - filled ))
+  local bar=""
+  for ((i=0; i<filled; i++)); do bar+="█"; done
+  for ((i=0; i<empty; i++)); do bar+="░"; done
+  printf "\r  [%s] %d/%d  %s" "$bar" "$current" "$total" "$label"
+}
+
+# Wrap install_skill to track progress
+install_skill_progress() {
+  local name="$1"
+  CURRENT=$(( CURRENT + 1 ))
+  progress_bar "$CURRENT" "$TOTAL" "skill: $name          "
+
+  local dest="$SKILLS_DIR/$name/SKILL.md"
+  mkdir -p "$SKILLS_DIR/$name"
+
+  if [[ -f "$dest" && "$FORCE_UPDATE" == "false" ]]; then
+    local tmp; tmp=$(mktemp)
+    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$tmp" 2>/dev/null; then
+      if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
+        SKIPPED=$(( SKIPPED + 1 ))
+      else
+        printf "\r"
+        printf "  ↑ skill: %-28s (update available) — update? [y/N] " "$name"
+        read -r answer </dev/tty
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+          cp "$tmp" "$dest"
+          UPDATED=$(( UPDATED + 1 ))
+        else
+          SKIPPED=$(( SKIPPED + 1 ))
+        fi
+      fi
+    else
+      FAILED=$(( FAILED + 1 ))
+    fi
+    rm -f "$tmp"
+  else
+    if curl -fsSL "$REPO_RAW/skills/$name/SKILL.md" -o "$dest" 2>/dev/null; then
+      INSTALLED=$(( INSTALLED + 1 ))
+    else
+      printf "\r  ❌ skill: %-28s not found in repo\n" "$name"
+      FAILED=$(( FAILED + 1 ))
+    fi
+  fi
+}
+
+# Wrap install_agent to track progress
+install_agent_progress() {
+  local name="$1"
+  CURRENT=$(( CURRENT + 1 ))
+  progress_bar "$CURRENT" "$TOTAL" "agent: @$name          "
+
+  local dest="$AGENTS_DIR/$name.md"
+  mkdir -p "$AGENTS_DIR"
+
+  if [[ -f "$dest" && "$FORCE_UPDATE" == "false" ]]; then
+    local tmp; tmp=$(mktemp)
+    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$tmp" 2>/dev/null; then
+      if diff -q "$dest" "$tmp" > /dev/null 2>&1; then
+        SKIPPED=$(( SKIPPED + 1 ))
+      else
+        printf "\r"
+        printf "  ↑ agent: %-28s (update available) — update? [y/N] " "@$name"
+        read -r answer </dev/tty
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+          cp "$tmp" "$dest"
+          UPDATED=$(( UPDATED + 1 ))
+        else
+          SKIPPED=$(( SKIPPED + 1 ))
+        fi
+      fi
+    else
+      FAILED=$(( FAILED + 1 ))
+    fi
+    rm -f "$tmp"
+  else
+    if curl -fsSL "$REPO_RAW/agents/$name.md" -o "$dest" 2>/dev/null; then
+      INSTALLED=$(( INSTALLED + 1 ))
+    else
+      printf "\r  ❌ agent: %-28s not found in repo\n" "@$name"
+      FAILED=$(( FAILED + 1 ))
+    fi
+  fi
+}
+
 # ── Install / update ──────────────────────────────────────────────────────────
-echo "InCred AI — installing to ~/.claude/"
-[[ "$FORCE_UPDATE" == "true" ]] && echo "(--update: overwriting existing files without prompting)"
+TOTAL=$(( ${#SKILLS_TO_INSTALL[@]} + ${#AGENTS_TO_INSTALL[@]} ))
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  InCred AI — Claude Code Skills & Agents"
+echo "  Installing to ~/.claude/"
+[[ "$FORCE_UPDATE" == "true" ]] && echo "  Mode: --update (overwriting without prompting)"
+printf "  Items: %d skills + %d agents = %d total\n" \
+  "${#SKILLS_TO_INSTALL[@]}" "${#AGENTS_TO_INSTALL[@]}" "$TOTAL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-if [[ ${#SKILLS_TO_INSTALL[@]} -gt 0 ]]; then
-  echo "Skills:"
-  for skill in "${SKILLS_TO_INSTALL[@]}"; do
-    install_skill "$skill"
-  done
-fi
+for skill in "${SKILLS_TO_INSTALL[@]}"; do
+  install_skill_progress "$skill"
+done
 
-if [[ ${#AGENTS_TO_INSTALL[@]} -gt 0 ]]; then
+for agent in "${AGENTS_TO_INSTALL[@]}"; do
+  install_agent_progress "$agent"
+done
+
+# Clear progress bar line and print summary
+printf "\r%-60s\r" " "
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+printf "  ✅ Installed:  %d\n" "$INSTALLED"
+[[ "$UPDATED"  -gt 0 ]] && printf "  ↑  Updated:    %d\n" "$UPDATED"
+[[ "$SKIPPED"  -gt 0 ]] && printf "  ✓  Up to date: %d\n" "$SKIPPED"
+[[ "$FAILED"   -gt 0 ]] && printf "  ❌ Failed:     %d\n" "$FAILED"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+if [[ "$FAILED" -gt 0 ]]; then
+  echo "  Some items failed. Check your network or re-run with --update."
   echo ""
-  echo "Agents:"
-  for agent in "${AGENTS_TO_INSTALL[@]}"; do
-    install_agent "$agent"
-  done
 fi
 
+echo "  Next steps:"
+echo "    1. Restart Claude Code"
+echo "    2. Run /reload-skills to activate"
 echo ""
-echo "Done. Restart Claude Code, then run /reload-skills to activate."
