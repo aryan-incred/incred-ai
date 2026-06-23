@@ -2,30 +2,17 @@
 
 Claude Code skills and agents for InCred engineers. Includes shared engineering tools (codebase exploration, KB generation) and MM team SDLC skills for the Money Movement team.
 
----
-
-## One-Time Setup (Private Repo)
-
-This repo is private. You need a read-only token to install from it. Ask Aryan for the token, then add it to your shell profile once:
-
-```bash
-# Add to ~/.zshrc or ~/.bashrc
-echo 'export INCRED_AI_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx' >> ~/.zshrc
-source ~/.zshrc
-```
-
-All install commands below use `$INCRED_AI_TOKEN` automatically once it's set.
+**Public repo — no token required.**
 
 ---
 
 ## Quick Install
 
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash
 ```
 
-No flags = installs the **story creation preset** (default). Restart Claude Code and run `/reload-skills` to activate.
+No flags = installs the **story creation preset** (default). Restart Claude Code and run `/reload-skills`.
 
 ---
 
@@ -40,53 +27,43 @@ No flags = installs the **story creation preset** (default). Restart Claude Code
 | `all` | Full team setup | Everything |
 
 ```bash
-# Story creation preset (MM PMs)
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset story
+# MM PM
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset story
 
-# Full SDLC pipeline (MM Developers / Tech Leads / QA)
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset pipeline
+# MM Developer / Tech Lead / QA
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset pipeline
 
 # Everything
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset all
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset all
 ```
 
 ### Individual Skills & Agents
 
 ```bash
 # Single skill
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story
 
 # Multiple skills
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story,mm-enrich
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story,mm-enrich
 
 # Skills + agents
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story --agent mm-enricher,mm-scoping-analyst
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story --agent mm-enricher,mm-scoping-analyst
 
 # Shared engineering tools only (any InCred engineer)
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill code-explorer,kb-merge,claude-publish
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill code-explorer,kb-merge,claude-publish
 
 # See everything available
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --list
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --list
 ```
 
 ### Updating
 
 ```bash
-# Update everything silently
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset all --update
+# Update everything
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset all --update
 
-# Update a specific skill (prompts if file changed)
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story --update
+# Update a specific skill (prompts if changed)
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-story --update
 ```
 
 ---
@@ -101,7 +78,7 @@ For any InCred engineer — not team-specific.
 |-------|---------|--------------|
 | `code-explorer` | `/code-explorer` | Explores any InCred microservice from inside its directory. Produces `SERVICE-KB.md` (human-readable, 9 sections) and `.service-kb/index.json` (machine-readable). Uses GitNexus for AST analysis + targeted file reads. Self-improves after each run. |
 | `kb-merge` | `/kb-merge` | Assembles a unified domain KB from all `index.json` files created by `/code-explorer`. Produces `api-registry.md`, `integrations.md` (cross-service impact table), `data-models.md`, `services.md`, and an HTML architecture overview. Never re-reads source code. |
-| `claude-publish` | `/claude-publish` | Publishes local skill/agent edits to this GitHub repo. Auto-detects changed files, shows diffs, waits for approval. Supports `--skill`, `--agent`, `--all`, `--dry-run`. |
+| `claude-publish` | `/claude-publish` | Publishes local skill/agent edits to configured GitHub repos. Auto-detects changed files, shows diffs, waits for approval. Syncs to all repos in `publish-config.json` by default. |
 
 ### MM Story Skills (PM-facing)
 
@@ -115,14 +92,14 @@ For Money Movement PMs. All story work lives in one skill — `/mm-story`.
 **`mm-story` flags at a glance:**
 
 ```bash
-/mm-story                              # create new epic
-/mm-story --add   MM-Epic-5            # add story to existing epic
-/mm-story --edit  MM-Epic-5-Story-3A   # edit story (pre-pipeline only)
-/mm-story --review   MM-Epic-5 MM-Epic-5-Story-3A  # checklist check, read-only
+/mm-story --help                               # full PM workflow guide
+/mm-story                                      # create new epic
+/mm-story --add   MM-Epic-5                    # add story to existing epic
+/mm-story --edit  MM-Epic-5-Story-3A           # edit story (pre-pipeline only)
+/mm-story --review   MM-Epic-5 MM-Epic-5-Story-3A   # checklist check, read-only
 /mm-story --check-gap MM-Epic-5 MM-Epic-5-Story-3A  # explain GAP-REPORT.md
-/mm-story --submit   MM-Epic-5 MM-Epic-5-Story-3A  # Phase 1 formal gate
-/mm-story --revise   MM-Epic-5 MM-Epic-5-Story-3A  # update from PR comments
-/mm-story --help                       # full PM workflow guide
+/mm-story --submit   MM-Epic-5 MM-Epic-5-Story-3A   # Phase 1 formal gate
+/mm-story --revise   MM-Epic-5 MM-Epic-5-Story-3A   # update from PR comments
 ```
 
 ### MM Pipeline Skills (Developer / Tech Lead / QA)
@@ -169,8 +146,7 @@ Agents are specialist subagents invoked automatically by skills during pipeline 
 
 ### PM / Product Manager (MM team)
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset story
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset story
 ```
 Installs `mm-story` + `mm-enrich` + 3 PM agents.
 
@@ -178,8 +154,7 @@ Installs `mm-story` + `mm-enrich` + 3 PM agents.
 
 ### Developer (MM team)
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset pipeline
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --preset pipeline
 ```
 Installs full MM pipeline + 7 engineering agents.
 
@@ -187,28 +162,24 @@ Installs full MM pipeline + 7 engineering agents.
 
 ### Tech Lead (MM team)
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-approve-plan,mm-status --agent mm-tech-reviewer,mm-codebase-planner
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-approve-plan,mm-status --agent mm-tech-reviewer,mm-codebase-planner
 ```
 
 ### QA Engineer (MM team)
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-ship,mm-status --agent mm-qa-gatekeeper
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill mm-ship,mm-status --agent mm-qa-gatekeeper
 ```
 
 ### Any InCred Engineer (shared tools only)
 ```bash
-curl -fsSL -H "Authorization: token $INCRED_AI_TOKEN" \
-  https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill code-explorer,kb-merge,claude-publish
+curl -fsSL https://raw.githubusercontent.com/aryan-incred/incred-ai/main/install.sh | bash -s -- --skill code-explorer,kb-merge,claude-publish
 ```
-Codebase exploration and KB generation — no MM team dependency.
 
 ---
 
 ## Self-Learning Skills
 
-All skills in this repo follow the shared memory protocol (`claude/shared/memory-protocol.md`). Over time each skill learns:
+All skills follow the shared memory protocol (`claude/shared/memory-protocol.md`). Over time each skill learns:
 
 - **User preferences** — which approval gates you always approve, which steps you always skip
 - **Run efficiency** — which reads return nothing useful for your codebase
@@ -228,16 +199,16 @@ Memory is stored per-user, per-skill at `~/.claude/skills/[skill]/memory/`. Noth
 
 ## Publishing Updates
 
-If you have edit access, use `/claude-publish` to push local changes:
+Use `/claude-publish` to push local changes to GitHub:
 
 ```bash
-/claude-publish              # detect what changed vs remote
-/claude-publish --skill mm-story   # publish specific skill
-/claude-publish --all --dry-run    # preview without pushing
-/claude-publish --all --update     # force update everything
+/claude-publish                      # detect what changed, push to all repos
+/claude-publish --skill mm-story     # publish specific skill
+/claude-publish --all --dry-run      # preview without pushing
+/claude-publish --repo org           # push to org repo only
 ```
 
-Config saved at `~/.claude/publish-config.json` after first run.
+Config at `~/.claude/publish-config.json`.
 
 ---
 
@@ -253,8 +224,8 @@ incred-ai/
     ├── skills/
     │   ├── code-explorer/            ← shared: microservice KB generator
     │   ├── kb-merge/                 ← shared: domain KB assembler
-    │   ├── claude-publish/           ← shared: publish skills to this repo
-    │   ├── mm-story/                 ← MM PM: all story work (create/review/submit/etc)
+    │   ├── claude-publish/           ← shared: publish skills to GitHub
+    │   ├── mm-story/                 ← MM PM: all story work
     │   ├── mm-enrich/                ← MM PM: Knowledge Base enrichment
     │   ├── mm-blueprint/             ← MM dev: Phase 2 blueprinting
     │   ├── mm-approve-plan/          ← MM PM+TL: PLAN.md approval (--pm / --tech)
