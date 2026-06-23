@@ -13,6 +13,22 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-tdd/memory/`
+
+Run M0 → M2 at start. Run M3 → M5 at end.
+
+Key things to learn:
+- Does developer always approve chunk commit gates → condense them
+- Which test framework is used per repo → skip auto-detection on re-runs
+- Does developer always proceed from Phase 3 to Phase 4 immediately → skip the explicit gate prompt
+- Does developer always run full test suite before committing → make that default
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start):**

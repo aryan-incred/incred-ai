@@ -13,6 +13,22 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-telemetry/memory/`
+
+Run M0 → M2 at start. Run M3 → M5 at end.
+
+Key things to learn:
+- Does user always skip dashboard update → make it opt-in with --dashboard flag
+- Does user always send Slack notification → make that the default
+- Which Slack channel the team always uses → pre-fill it
+- Does user always trigger re-index → make it automatic after telemetry
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start):**

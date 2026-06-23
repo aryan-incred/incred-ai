@@ -13,6 +13,22 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-enrich/memory/`
+
+Run M0 → M2 at start (skip if --help). Run M3 → M5 at end.
+
+Key things to learn:
+- Does user always commit to main → default to main
+- Does user always approve batch → skip per-item review, go straight to batch approval
+- Does user always use --slack → surface as default suggestion
+- Which KB files the user enriches most → pre-load those on future runs
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start — skip if --help):**

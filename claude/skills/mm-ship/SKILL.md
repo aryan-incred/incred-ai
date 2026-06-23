@@ -13,6 +13,22 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-ship/memory/`
+
+Run M0 → M2 at start. Run M3 → M5 at end.
+
+Key things to learn:
+- Does user always pick the same QA environment per service → default to it
+- Does user always skip the conflict check prompt → streamline it
+- Does user always approve deploy gate immediately → condense gate
+- Which services are always clean with no conflict → skip conflict check for those
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start):**

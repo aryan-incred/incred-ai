@@ -13,6 +13,23 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-blueprint/memory/`
+
+Run M0 → M2 at start (load user preferences, skip learned gates).
+Run M3 → M5 at end (log run, update user memory, surface improvement proposals every 5 runs).
+
+Key things to learn:
+- Does developer always approve push gate quickly → condense gate
+- Does developer always skip Slack notify → default to skip
+- Which GitNexus queries return empty for this codebase → skip on future runs
+- Does developer always approve PR creation → show condensed PR preview
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start):**

@@ -18,13 +18,13 @@ AGENTS_DIR="$HOME/.claude/agents"
 FORCE_UPDATE=false
 
 # ── Preset definitions ────────────────────────────────────────────────────────
-PRESET_STORY_SKILLS=(mm-story mm-enrich code-explorer mm-review-story mm-check-gap mm-analyze)
+PRESET_STORY_SKILLS=(mm-story mm-enrich code-explorer)
 PRESET_STORY_AGENTS=(mm-enricher mm-scoping-analyst mm-pm-reviewer)
 
-PRESET_PIPELINE_SKILLS=(mm-analyze mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge)
+PRESET_PIPELINE_SKILLS=(mm-story mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge)
 PRESET_PIPELINE_AGENTS=(mm-scoping-analyst mm-codebase-planner mm-test-architect mm-implementer mm-qa-gatekeeper mm-release-herald mm-tech-reviewer)
 
-PRESET_ALL_SKILLS=(mm-story mm-enrich code-explorer mm-review-story mm-check-gap mm-analyze mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge)
+PRESET_ALL_SKILLS=(mm-story mm-enrich code-explorer mm-blueprint mm-tdd mm-ship mm-telemetry mm-status mm-approve-plan kb-merge claude-publish)
 PRESET_ALL_AGENTS=(mm-enricher mm-scoping-analyst mm-pm-reviewer mm-tech-reviewer mm-codebase-planner mm-test-architect mm-implementer mm-qa-gatekeeper mm-release-herald)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -112,8 +112,9 @@ install_agent() {
 print_list() {
   echo ""
   echo "Available skills:"
-  echo "  Story creation:  mm-story  mm-enrich  code-explorer  mm-review-story  mm-check-gap  mm-analyze"
-  echo "  Full pipeline:   mm-blueprint  mm-tdd  mm-ship  mm-telemetry  mm-status  mm-approve-plan  kb-merge"
+  echo "  Story creation:  mm-story  mm-enrich  code-explorer"
+  echo "  Full pipeline:   mm-story  mm-blueprint  mm-tdd  mm-ship  mm-telemetry  mm-status  mm-approve-plan  kb-merge"
+  echo "  Note: mm-story covers create/review/check-gap/submit/revise in one skill"
   echo ""
   echo "Available agents:"
   echo "  Story creation:  mm-enricher  mm-scoping-analyst  mm-pm-reviewer"

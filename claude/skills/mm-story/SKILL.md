@@ -1,108 +1,155 @@
 ---
 name: mm-story
 description: |
-  Creates, extends, or edits Money Movement (MM) epics and stories following InCred's standards. Use this skill whenever the user asks to write a story, create an epic, add a new story to an existing epic, edit or update an existing story, draft requirements, or start a new MM feature — even if they just say "let's write up the story for X", "add a story to Epic 5", or "update story 3A". MM-specific wrapper around /epic-stories: enforces MM domain prefix, pre-loads MM Knowledge_Base and PRFAQs context, saves to the correct MM directory, and hands off to /mm-analyze when done. Use this BEFORE /mm-analyze — story creation comes first.
+  The single PM skill for all Money Movement story work. Use whenever a PM wants to create, edit, review, fix gaps, or submit a story into the pipeline. Flags: /mm-story (create new epic), --add (add story), --edit (edit story), --review (checklist check, read-only), --check-gap (explain any GAP-REPORT.md — from story validation OR blueprint phase), --submit (Phase 1 formal gate), --revise (update from PR comments). Self-learns user preferences over time to reduce repeated approval prompts and token usage.
 command: mm-story
 trigger: |
-  - User asks to write, create, add, or edit an MM epic or story
-  - User wants to spec out a new MM feature or requirement
-  - User says "add a story to existing epic" or "update this story"
-  - User needs to create or modify a story before or after the SDLC pipeline
-  Note: This skill runs BEFORE /mm-analyze for new stories. For edits to stories already in /mm-analyze, use /mm-analyze --revise instead.
+  - PM wants to create, write, or spec out an MM epic or story
+  - PM wants to review a story before submitting
+  - PM wants to understand or fix a gap report (from any phase)
+  - PM wants to formally submit a story into the SDLC pipeline
+  - PM wants to revise a story based on PR feedback
 kind: skill
 visibility: project
 ---
 
-## INTERACTION PROTOCOL
+## Memory
 
-**Identify the caller (run once at start):**
-```bash
-git config user.email
-```
-Look up the email in `MM/Knowledge_Base/personas.md`. If found, greet by first name and store USER_NAME / USER_ROLE. If not found, present once:
-```
-I don't recognise [email] in personas.md. Who are you?
-  [1] PM / Product Manager    [2] Developer
-  [3] Tech Lead               [4] QA Engineer
-  [5] Skip — continue anonymously
-```
-Role adjusts greeting and log author only — it **never blocks anyone from running any phase**.
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
 
-**All choices and approvals use numbered options.** Never present a gate as `(yes / no)`. Standard formats:
-- Approve / reject: `[1] Approve — proceed  [2] Reject — stop  [3] Comment first`
-- Phase gate: `[1] Start Phase N  [2] Review more  [3] Stop here`
-- Notification: `[1] Send now  [2] Skip  [3] Edit first`
-- Triage confirm: `[1] Apply all  [2] Edit the plan  [3] Cancel`
+Memory location: `~/.claude/skills/mm-story/memory/`
+
+Run M0 → M2 at start (load user preferences, skip learned gates).
+Run M3 → M5 at end (log run, update user memory, surface improvement proposals every 5 runs).
 
 ---
 
-## Overview
+## Interaction Protocol
 
-**Pre-Phase 1** of InCred MM's SDLC pipeline — story creation and editing comes before validation.
+**Identify caller** (M0 — run once):
+```bash
+git config user.email
+```
+Look up in `MM/Knowledge_Base/personas.md`. Greet by first name if found. If not found, ask role once (role never blocks access).
 
-This skill supports three modes:
-- **NEW EPIC** — create a full epic + stories from scratch
-- **ADD STORY** — add a new story to an existing epic
-- **EDIT STORY** — modify an existing story that hasn't entered the SDLC pipeline yet
+**All choices use numbered options — never yes/no.**
 
-The full story-writing intelligence lives in `/epic-stories`. This skill adds the MM-specific layer: domain guard, Knowledge_Base grounding, correct save paths, and SDLC handoff.
+---
 
-> **Important distinction:** Use `mm-story --edit` for stories that haven't been validated yet (pre-Phase 1). For stories already in the pipeline with an open PR, use `/mm-analyze --revise` instead — that reads PR review comments and updates the story in context.
+## Flag Routing
 
-**Monorepo:** `/Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo/`
+| Invocation | Mode |
+|-----------|------|
+| `/mm-story` | CREATE new epic |
+| `/mm-story --add [Epic_ID]` | ADD story to existing epic |
+| `/mm-story --edit [Epic_ID] [Story_ID]` | EDIT existing story (pre-pipeline only) |
+| `/mm-story --review [Epic_ID] [Story_ID]` | REVIEW — checklist, read-only |
+| `/mm-story --check-gap [Epic_ID] [Story_ID]` | CHECK GAP — explain GAP-REPORT.md from any phase |
+| `/mm-story --submit [Epic_ID] [Story_ID]` | SUBMIT — Phase 1 formal gate |
+| `/mm-story --revise [Epic_ID] [Story_ID]` | REVISE — update story from PR comments |
 
-**Invocation:**
-- `/mm-story` — new epic from scratch (prompts for feature)
-- `/mm-story MM-Epic-5 payment reconciliation` — new epic with topic
-- `/mm-story --add MM-Epic-5` — add a new story to existing epic
-- `/mm-story --edit MM-Epic-5-Story-3A` — edit an existing story
+If `--help` flag → show guide below and stop. Do not run any other steps.
+
+If no flag and Epic_ID provided but exists → ask:
+```
+MM-Epic-[N] exists. What would you like to do?
+  [1] Add a new story    [2] Edit a story    [3] Review a story    [4] Submit a story
+```
+
+---
+
+## --help: MM STORY GUIDE
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MM STORY — COMPLETE GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CREATING STORIES
+────────────────
+  /mm-story                          Create a new epic from scratch
+  /mm-story --add MM-Epic-5          Add a new story to an existing epic
+  /mm-story --edit MM-Epic-5-Story-3A  Edit a story (only before pipeline starts)
+
+  Tip: Enrich the Knowledge Base first for better stories:
+    /mm-enrich --help
+
+CHECKING A STORY
+────────────────
+  /mm-story --review MM-Epic-5 MM-Epic-5-Story-3A
+    Run the Sr. PM Sign-Off Checklist (read-only, no git ops).
+    Use this to self-check before submitting.
+
+    Checks:
+      ✓ "So What?" test (business value in 2 sentences)
+      ✓ Story fits in <48 hours
+      ✓ No dependency on unshipped work
+      ✓ AI Acceleration Strategy with real sample data
+      ✓ No hidden context or unexplained acronyms
+      ✓ Demo Gate with named person, dataset, and number
+
+UNDERSTANDING GAPS
+──────────────────
+  /mm-story --check-gap MM-Epic-5 MM-Epic-5-Story-3A
+    Explains the GAP-REPORT.md in plain English.
+    Works whether the gap was found during submission (Phase 1)
+    or during blueprinting (Phase 2).
+    Offers to apply fixes one at a time.
+
+SUBMITTING TO THE PIPELINE
+──────────────────────────
+  /mm-story --submit MM-Epic-5 MM-Epic-5-Story-3A
+    Phase 1 formal gate. Creates the feature branch,
+    validates the story, and either:
+      PASS → developer can run /mm-blueprint
+      FAIL → GAP-REPORT.md pushed to feature branch
+
+  After submission, the developer runs:
+    /mm-blueprint MM-Epic-5 MM-Epic-5-Story-3A
+    (generates PLAN.md — you don't need to do anything for this step)
+
+AFTER THE PR IS RAISED
+──────────────────────
+  PM approves Section 1:       /mm-approve-plan --pm MM-Epic-5 MM-Epic-5-Story-3A
+  Tech Lead approves Section 2: /mm-approve-plan --tech MM-Epic-5 MM-Epic-5-Story-3A
+
+  If reviewers leave comments on your story:
+    /mm-story --revise MM-Epic-5 MM-Epic-5-Story-3A
+    (reads PR comments, updates story, re-requests review)
+
+THE FULL PM FLOW
+────────────────
+  1. /mm-enrich --help          ← build KB first (one-time setup)
+  2. /mm-story                  ← write the epic + stories
+  3. /mm-story --review ...     ← self-check
+  4. /mm-story --submit ...     ← formal submission
+  5. Gaps? /mm-story --check-gap ...  ← understand and fix
+  6. Re-submit: /mm-story --submit ...
+  7. Developer runs /mm-blueprint (you don't need to do this)
+  8. /mm-approve-plan --pm ...  ← approve Section 1 of PLAN.md
+  9. After merge → developer handles Phases 3–8
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Questions? Ask Claude in plain English — it will route to the right mode.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ---
 
 ## STEP 0: DOMAIN GUARD
 
-Confirm we're working on MM before anything else.
+Check Epic_ID or Story_ID prefix before doing anything.
 
-If the user provides an Epic ID or Story ID with a non-MM prefix (e.g., `LAP-Epic-3`, `UBL-Epic-1`):
-
+Valid: `MM-` only. Any other prefix → stop immediately:
 ```
-❌ WRONG SKILL — Domain mismatch
-
-You passed: [provided ID]
-This skill:  mm-story (Money Movement team only)
-
-MM IDs follow the pattern: MM-Epic-[N] / MM-Epic-[N]-Story-[X]
-
-No files were read. Nothing was created.
-```
-
-If no domain prefix is given, proceed — this skill assumes MM context.
-
----
-
-## STEP 1: DETECT MODE
-
-Determine which mode to run based on flags and what exists in the monorepo.
-
-**Mode detection (in order):**
-
-| Signal | Mode |
-|--------|------|
-| `--add MM-Epic-[N]` flag | ADD STORY to existing epic |
-| `--edit MM-Epic-[N]-Story-[X]` flag | EDIT existing story |
-| No flag, epic ID given, epic file exists | Ask: "Add a story or edit an existing one?" |
-| No flag, no existing epic | NEW EPIC |
-
-Print the detected mode before proceeding:
-```
-📝 Mode: NEW EPIC    — creating MM-Epic-[N] from scratch
-➕ Mode: ADD STORY   — adding to MM-Epic-[N] (currently [N] stories)
-✏️  Mode: EDIT STORY  — editing MM-Epic-[N]-Story-[X]
+❌ WRONG SKILL — mm-story is for MM team only.
+MM IDs: MM-Epic-[N] / MM-Epic-[N]-Story-[X]
+Nothing was read or changed.
 ```
 
 ---
 
-## STEP 2: PULL LATEST MONOREPO
+## STEP 1: SYNC MONOREPO
 
 ```bash
 cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
@@ -111,231 +158,333 @@ git checkout main && git pull origin main
 
 ---
 
-## STEP 2: LOAD MM CONTEXT
+## MODE: CREATE
 
-Before writing a single story, ground yourself in MM's existing knowledge. This is what separates an MM-aware spec from a generic one.
+*No code is read. Only story markdown files and KB index.md.*
 
-**Read in order:**
-1. `MM/Knowledge_Base/` — legacy service maps, shared utilities, existing capabilities. This is the MM "Grounding Gate" — cite facts from here as `Knowledge_Base/[file] § [section]`
-2. `MM/PRFAQs/` — any existing PRFAQ that this epic traces back to
-3. Check `MM/Epic_Stories/` for the next available Epic number (to assign `MM-Epic-[N]`)
-
-**MM-specific naming:**
-- Epic ID format: `MM-Epic-[N]` (e.g., `MM-Epic-6`)
-- Story ID format: `MM-Epic-[N]-Story-[X]` (e.g., `MM-Epic-6-Story-1`, `MM-Epic-6-Story-2A`)
-- Save path: `MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/MM-Epic-[N]-[ShortTitle].md`
-
----
-
-## STEP 3A: NEW EPIC MODE — Run /epic-stories with MM context
-
-Now invoke `/epic-stories` with the MM context pre-loaded. Pass the following as working context to the `/epic-stories` workflow:
-
-```
-Domain: Money Movement (MM)
-Team: InCred MM team
-Knowledge Base: MM/Knowledge_Base/ (grounded — cite as KB-file § section)
-PRFAQs: MM/PRFAQs/
-Epic ID prefix: MM-Epic-[N]
-Story ID format: MM-Epic-[N]-Story-[X or XA/XB]
-Save path: MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/
-Linear hierarchy: Initiative → MM Sub-Initiative → Project (this epic) → Issues (stories)
-
-MM-specific constraints:
-- Services are microservices, shared utilities, or legacy ERPNext/Frappe components
-- Payment flows must reference p95 latency targets in Implementation Notes
-- Any story touching KYC, AML/STR, payment limits, or reconciliation must note compliance flag
-- Story points: 1-3 max, <48h per story, 8-10 stories per epic (InCred standard)
-```
-
-Follow the full `/epic-stories` workflow from Phase 0 through Phase 6:
-- Phase 0: Scope Guard (right-size the epic)
-- Leverage Check (what does MM's system already know?)
-- Phase 1: Socratic Discovery (one question at a time)
-- Phase 2: Draft Epic Header → wait for approval
-- Phase 3: Draft Stories one by one → wait for approval after each
-- Phase 4: Save to `MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/`
-- Phase 5: Auto-Review Loop (3-agent parallel review)
-- Phase 6: Linear Placement Gate + Push
-
-The `/epic-stories` workflow handles all of this — follow it completely. Do not skip the review loop or the Linear placement gate.
-
----
-
-## STEP 3B: ADD STORY MODE
-
-Adding a story to an existing epic is scoped work — you're not rewriting the whole epic, just extending it with one new atomic story that fits the epic's existing scope.
-
-**Read the existing epic file first:**
+**KB health check** (skip if memory shows user always skips):
 ```bash
-cat MM/Epic_Stories/[Epic_ID]_[Title]/[Epic_ID]-[ShortTitle].md
+cat MM/Knowledge_Base/index.md 2>/dev/null | head -5
+```
+If missing or empty:
+```
+⚠️  MM Knowledge Base is empty — stories will have RESOLVE-IN-PLAN: blockers.
+  [1] Continue anyway    [2] Run /mm-enrich first to build the KB
 ```
 
-Extract from the existing epic:
-- Current story count and last Story ID (to assign the next one)
-- Epic scope (IN SCOPE / OUT OF SCOPE sections) — the new story must fit within IN SCOPE
-- Epic sizing (if already at 8-10 stories → propose sub-epic instead)
-- Existing story IDs to avoid duplication
+Read in order:
+1. `MM/Knowledge_Base/index.md` — domain facts quick lookup
+2. `MM/PRFAQs/` — any PRFAQ this epic traces back to
+3. `MM/Epic_Stories/` — next available Epic number
 
-**Epic health check before adding:**
-```
-Epic MM-Epic-[N] currently has [N] stories ([total] pts).
-[If N = 8-10]: This epic is at capacity. New story should go in sub-epic MM-Epic-[N.1].
-[If N < 8]:    Adding Story-[next] — fits within epic capacity.
-```
+Run the full `/epic-stories` workflow with MM context:
+- Domain: Money Movement (MM)
+- Epic ID: `MM-Epic-[N]`
+- Story ID: `MM-Epic-[N]-Story-[X]` or `[XA/XB]` for splits
+- Save path: `MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/`
+- Sizing: 1–3pts, <48h per story, 8–10 stories per epic
 
-**Write the new story following /epic-stories Phase 3 format:**
-- Assign next Story ID: `MM-Epic-[N]-Story-[next]` (or XA/XB if splitting)
-- Ask the same clarifying questions as /epic-stories Phase 1 (one at a time)
-- Write ACs, Implementation Notes, Testing Strategy, Definition of Done
-- Flag compliance areas if applicable (see MM Compliance Flags section)
+Follow `/epic-stories` phases 0–6 completely including review loop and Linear placement gate.
 
-**Append to the existing epic file** — do not rewrite the whole file:
-```bash
-# Append new story section to existing epic file
-# Show the new story content to user first for approval
-```
-
-Show the full new story content and wait for approval before writing to the file.
-
-After appending, re-run the auto-review (Phase 5 from /epic-stories) on the new story only — not the full epic — to keep tokens light.
-
----
-
-## STEP 3C: EDIT STORY MODE
-
-Editing a story is targeted — change only what the user specifies, preserve everything else.
-
-> **Before editing:** Check whether this story has already entered the SDLC pipeline (does a feature branch exist? is there an open PR?). If yes, use `/mm-analyze --revise` instead — that mode reads PR review comments and updates in the correct pipeline context.
-
-```bash
-# Check for existing feature branch
-git branch -a | grep feature/[Epic_ID]_[Story_ID]
-```
-
-If branch exists → stop and redirect:
-```
-⚠️  This story is already in the SDLC pipeline (branch exists).
-
-Use /mm-analyze --revise [Epic_ID] [Story_ID] instead.
-That skill reads PR review comments and updates the story
-in the correct pipeline context with proper approval gates.
-```
-
-If no branch → proceed with edit.
-
-**Read the existing story:**
-```bash
-cat MM/Epic_Stories/[Epic_ID]_[Title]/[Story_ID].md
-```
-
-**Ask the user what to change** — be specific:
-```
-I've read MM-Epic-[N]-Story-[X]. What would you like to change?
-
-Current sections:
-  1. User Story (As/I want/So that)
-  2. Acceptance Criteria ([N] ACs)
-  3. Implementation Notes
-  4. Testing Strategy
-  5. Definition of Done
-
-Tell me what to update, or paste the new content.
-```
-
-Wait for the user's input. Apply only the changes requested. Do not rewrite unrelated sections.
-
-**Show a diff-style preview before saving:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️  APPROVAL REQUIRED — Story Edit
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Story: [Story_ID]
-Changes:
-
-  BEFORE: [original text]
-  AFTER:  [new text]
-
-  [for each changed section]
-
-  [1] Save these changes     [2] Reject — start over     [3] Change something specific
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Only write to file after explicit "yes".
-
-After saving, run the /epic-stories review agents (Phase 5) on the changed story to catch any issues the edit introduced.
-
----
-
-## STEP 4: HANDOFF
-
-After save + review, present the SDLC handoff — do not auto-invoke anything:
-
-**NEW EPIC or ADD STORY:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ MM STORY COMPLETE — [NEW EPIC | STORY ADDED]
-
-Epic:    MM-Epic-[N] — [title]
-Stories: [N] stories ([total] pts) | Last added: [Story_ID]
-Saved:   MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/
-Review:  [Health score]
-
-NEXT: SDLC PIPELINE PHASE 1
-When ready to validate, run one story at a time:
-
-  /mm-analyze MM-Epic-[N] MM-Epic-[N]-Story-[X]
-
-Phase 1 validates completeness before any technical
-planning begins. Run for each story independently.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**EDIT STORY (pre-pipeline):**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ STORY UPDATED — [Story_ID]
-
-Changes: [summary of what changed]
-Saved:   MM/Epic_Stories/[Epic_ID]_[Title]/[Story_ID].md
-Review:  [Health score on changed story]
-
-If this story hasn't been analyzed yet:
-  /mm-analyze [Epic_ID] [Story_ID]
-
-If already in pipeline with open PR:
-  /mm-analyze --revise [Epic_ID] [Story_ID]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
----
-
-## MM Sizing Quick Reference
-
-| Points | Time | When to use |
-|--------|------|-------------|
-| 1pt | ~2–4 hrs | Single endpoint, single DocType, single calculation |
-| 2pts | ~1 day | Preferred max for most stories |
-| 3pts | ~1.5 days | Hard ceiling — split into XA/XB if larger |
-
-**Epic limit:** 8–10 stories. If more are needed → create sub-epic `MM-Epic-[N.M]`.
-
-**Split trigger:** If a story exceeds 2pts or has multiple independent deliverables → split into Story XA and Story XB before finalising.
-
----
-
-## MM Compliance Flags (add to story if applicable)
-
-If any story touches these areas, note a compliance flag in Implementation Notes:
+**MM compliance flags** — add to Implementation Notes if story touches:
 
 | Area | Flag |
 |------|------|
-| KYC / V-CIP | `COMPLIANCE: KYC — check Central-Infosec-Policies OBS` |
-| AML / STR | `COMPLIANCE: AML — check OBS-relevant entries` |
-| Payment limits / thresholds | `COMPLIANCE: RBI payment limits — verify current thresholds` |
-| Data residency / encryption | `COMPLIANCE: Data — check infosec policy` |
-| API security / access control | `COMPLIANCE: API security — check OBS` |
+| KYC / V-CIP | `COMPLIANCE: KYC` |
+| AML / STR | `COMPLIANCE: AML` |
+| Payment limits | `COMPLIANCE: RBI payment limits` |
+| Encryption / data residency | `COMPLIANCE: Data` |
+| API security | `COMPLIANCE: API security` |
+
+**Handoff:**
+```
+✅ MM STORY COMPLETE
+Epic: MM-Epic-[N] | Stories: [N] ([total]pts)
+Saved: MM/Epic_Stories/MM-Epic-[N]_[ShortTitle]/
+
+NEXT:
+  Self-check:   /mm-story --review MM-Epic-[N] MM-Epic-[N]-Story-[X]
+  Submit when ready: /mm-story --submit MM-Epic-[N] MM-Epic-[N]-Story-[X]
+```
+
+---
+
+## MODE: --add
+
+Read existing epic. Check story count (8–10 = suggest sub-epic). Assign next Story ID.
+Write new story in epic-stories Phase 3 format. Show full content for approval before appending.
+Run review agents on new story only (not full epic — keeps tokens light).
+
+---
+
+## MODE: --edit
+
+First check if story is already in the pipeline:
+```bash
+git branch -a | grep feature/[Epic_ID]_[Story_ID]
+```
+
+If branch exists → redirect:
+```
+⚠️  Story is already in the pipeline (branch exists).
+Use: /mm-story --revise [Epic_ID] [Story_ID]
+```
+
+If no branch → read story, ask what to change, show diff-style preview, write only changed sections.
+
+---
+
+## MODE: --review
+
+*Read-only. No git ops. No branch creation. Story files only.*
+
+Read the story file. Run all 6 criteria.
+
+| # | Criterion | Pass condition |
+|---|-----------|----------------|
+| 1 | "So What?" Test | Business value ≤2 sentences, no technical detail |
+| 2 | Story Atomicity | Completable in <48h, ≤3pts |
+| 3 | Vertical Slice | No dependency on unshipped parallel epic |
+| 4 | AI Prompt Readiness | `## AI Acceleration Strategy` with real sample data |
+| 5 | No Hidden Context | No unexplained acronyms or system names |
+| 6 | Demo Gate Defined | Named person + specific dataset + number-based pass criterion |
+
+**Output:**
+```
+═══════════════════════════════════════════════════════
+MM STORY REVIEW — [Story_ID]
+═══════════════════════════════════════════════════════
+  ✅/❌ "So What?" Test      — [specific finding]
+  ✅/❌ Story Atomicity       — [specific finding]
+  ✅/❌ Vertical Slice        — [specific finding]
+  ✅/❌ AI Prompt Readiness   — [specific finding]
+  ✅/❌ No Hidden Context     — [specific finding]
+  ✅/❌ Demo Gate Defined     — [specific finding]
+
+VERDICT: [PASS — ready for --submit | FAIL — [N] gaps]
+
+WHAT TO FIX:
+  1. [Criterion]: [specific missing item]
+     Fix: Add [exact section name] with [specific content]
+
+NEXT:
+  [PASS]:  /mm-story --submit [Epic_ID] [Story_ID]
+  [FAIL]:  Fix above → re-run /mm-story --review
+═══════════════════════════════════════════════════════
+```
+
+Offer to apply fixes:
+```
+  [1] Apply fixes one by one    [2] I'll fix manually    [3] Skip
+```
+
+---
+
+## MODE: --check-gap
+
+*Explains GAP-REPORT.md from ANY phase — story validation (--submit) or blueprint (mm-blueprint).*
+
+Find the gap report on the feature branch:
+```bash
+git fetch origin
+git checkout feature/[Epic_ID]_[Story_ID] 2>/dev/null || git checkout main
+```
+
+Read both:
+- `MM/Epic_Stories/[Epic_ID]_[Title]/GAP-REPORT.md`
+- `MM/Epic_Stories/[Epic_ID]_[Title]/[Story_ID].md`
+
+Check the `Source:` field in GAP-REPORT.md header to tell the PM which phase found the gap:
+
+```
+═══════════════════════════════════════════════════════
+GAP REPORT — [Story_ID]
+Source: [mm-story --submit (Phase 1) | mm-blueprint (Phase 2)]
+[N] items blocking [Phase 2 | blueprint completion]
+═══════════════════════════════════════════════════════
+
+GAP 1: [Criterion — plain English]
+  What it means:    [plain English, no jargon]
+  What's there now: "[current text or 'nothing']"
+  What to write:
+    In ## [Section Name]:
+    BEFORE: "[current]"
+    AFTER:  "[exact fix]"
+  Time to fix: ~[N] mins
+
+[repeat per gap]
+
+PRIORITY: Fix gaps [N, N] first — they block progress.
+
+AFTER FIXING:
+  Commit changes to the feature branch
+  Push to: feature/[Epic_ID]_[Story_ID]
+  Then re-run:
+    [If source = Phase 1]:  /mm-story --submit [Epic_ID] [Story_ID]
+    [If source = Phase 2]:  Developer re-runs /mm-blueprint [Epic_ID] [Story_ID]
+═══════════════════════════════════════════════════════
+```
+
+Offer to apply:
+```
+  [1] Apply fixes one by one    [2] I'll fix manually    [3] Skip
+```
+Show one diff at a time with approval gate. Never push automatically — remind PM to commit and push manually, then re-run the correct skill.
+
+---
+
+## MODE: --submit
+
+*Phase 1 formal gate. Creates feature branch. Pushes artifacts. Story files only — never reads code.*
+
+**Scope boundary:** Reads only story markdown files and PR comments. Never opens any code repository.
+
+### Run checklist
+
+Same 6 criteria as --review mode.
+
+**Classify requirement type from story text** (no code inspection):
+
+| Type | Signal in story text |
+|------|----------------------|
+| `[NEW FEATURE]` | Describes functionality that doesn't exist yet |
+| `[UPDATE IN EXISTING FEATURE]` | Modifies something described as existing |
+| `[BUG FIX]` | Corrects a broken behaviour |
+| `[ENHANCEMENT]` | Improves performance/UX of something existing |
+| `[REFACTOR]` | Restructures without changing business behaviour |
+| `[MIGRATION]` | Moves data, infrastructure, or systems ⚠️ |
+
+Service footprint from story metadata/tags — ask PM if absent.
+
+### Create or resume feature branch
+
+```bash
+# New
+git checkout -b feature/[Epic_ID]_[Story_ID]
+# Re-entry
+git checkout feature/[Epic_ID]_[Story_ID]
+git pull origin feature/[Epic_ID]_[Story_ID] 2>/dev/null || true
+```
+
+### Check for existing GAP-REPORT.md
+
+If found on branch — re-evaluate each prior gap against current story:
+- All resolved → delete report, proceed to validation result
+- Gaps remain → update report with current status
+
+### PASS — all criteria met
+
+Show approval gate (condensed if learned user), then:
+```bash
+git add MM/Epic_Stories/[Epic_ID]_[Title]/[Story_ID].md
+git commit -m "docs: validated story [Story_ID] — all criteria met"
+git push origin feature/[Epic_ID]_[Story_ID]
+```
+
+```
+✅ SUBMITTED — [Story_ID]
+Branch:           feature/[Epic_ID]_[Story_ID]
+Requirement Type: [CLASSIFICATION]
+Story Points:     [N]pts | Compliance: [YES/NO]
+
+NEXT: Developer runs /mm-blueprint [Epic_ID] [Story_ID]
+      (generates PLAN.md on this feature branch)
+      Code writing is blocked until PLAN.md PR merges to main.
+```
+
+### FAIL — gaps found
+
+Generate `GAP-REPORT.md` with source header:
+```markdown
+# GAP REPORT — [Story_ID]
+Source: mm-story --submit (Phase 1)
+Generated: [ISO 8601 timestamp]
+Branch: feature/[Epic_ID]_[Story_ID]
+
+## Failed Criteria
+- [ ] [Criterion]: [specific missing item]
+
+## PM Action Items
+1. [Specific action — exact section name to add or fix]
+
+## Re-entry Instructions
+Fix story → commit → push to feature/[Epic_ID]_[Story_ID]
+Then re-run: /mm-story --submit [Epic_ID] [Story_ID]
+```
+
+Show approval gate, then push to feature branch:
+```bash
+git add MM/Epic_Stories/[Epic_ID]_[Title]/GAP-REPORT.md
+git commit -m "docs: gap report for [Story_ID] — [N] criteria unmet"
+git push origin feature/[Epic_ID]_[Story_ID]
+```
+
+```
+❌ VALIDATION FAILED — [N] criteria unmet
+GAP-REPORT.md → feature/[Epic_ID]_[Story_ID]
+
+Understand gaps: /mm-story --check-gap [Epic_ID] [Story_ID]
+Fix + re-submit: /mm-story --submit [Epic_ID] [Story_ID]
+```
+
+---
+
+## MODE: --revise
+
+*Updates story based on open PR review comments. Story files only.*
+
+Auto-detect: if no `--revise` flag but open PR has unresolved comments on `[Story_ID].md` → offer to switch:
+```
+Open PR #[N] has [N] unresolved comments on the story file.
+  [1] Switch to revision mode    [2] Continue normally
+```
+
+Fetch PR comments via GitHub MCP. Filter to comments on `[Story_ID].md` only (not PLAN.md — those belong to `/mm-blueprint --revise`).
+
+Show triage before touching any file:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  STORY REVISION TRIAGE — PR #[N]
+[N] unresolved comments on [Story_ID].md
+
+  #1 [Sr. PM]: "Demo Gate missing named dataset"
+     → Update ## Demo Gate with dataset name
+
+  #2 [Sr. PM]: "Add mobile scope — could we include it?"
+     → REJECT — out of scope, log as future epic item
+
+  [1] Apply all    [2] Edit the plan    [3] Cancel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+After applying, re-run checklist. Show push approval gate. Re-request review after push.
+
+---
+
+## ⚠️ Human Approval Gate
+
+Before every push (condensed for learned users — see memory protocol):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  APPROVAL REQUIRED — Push to feature branch
+Branch: feature/[Epic_ID]_[Story_ID]
+Files:  [list]
+[full diff | condensed file list for trusted users]
+  [1] Approve    [2] Reject    [3] Show full diff first
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## Story Sizing Reference
+
+| Points | Time | When |
+|--------|------|------|
+| 1pt | ~2–4 hrs | Single endpoint or calculation |
+| 2pts | ~1 day | Preferred max |
+| 3pts | ~1.5 days | Hard ceiling — split into XA/XB if larger |
+
+Epic limit: 8–10 stories → sub-epic `MM-Epic-[N.M]` if more needed.
 
 ---
 
@@ -343,7 +492,10 @@ If any story touches these areas, note a compliance flag in Implementation Notes
 
 | Situation | Action |
 |-----------|--------|
-| Knowledge_Base empty or missing | Note "MM KB not yet built" — stay in business terms, use `RESOLVE-IN-PLAN:` markers |
-| No existing PRFAQs | Proceed without PRFAQ reference — note it in epic header |
-| Epic number conflict | Check `MM/Epic_Stories/` directory and pick next available N |
-| /epic-stories not available | Run the full epic-stories workflow inline using the template in this skill |
+| Non-MM domain prefix | Block at domain guard |
+| Story file not found | Prompt for manual path |
+| Branch already exists during --edit | Redirect to --revise |
+| KB index.md empty | Warn, offer to enrich first |
+| GAP-REPORT.md from mm-blueprint | --check-gap reads it the same way, tells PM to re-run /mm-blueprint after fixing |
+| GitHub MCP unavailable | Default to normal mode, note PR check skipped |
+| git push fails | Print remote URL + manual command |

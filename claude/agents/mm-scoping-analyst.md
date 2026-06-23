@@ -1,7 +1,7 @@
 ---
 name: mm-scoping-analyst
 description: |
-  MM requirements scoping specialist. Invoked by mm-analyze during Phase 1 to perform deep requirement type matching, gap identification, and Sr. PM Sign-off Checklist validation. Produces structured gap analysis with specific PM action items. Use this agent for focused, isolated requirement analysis without loading the full skill context.
+  MM requirements scoping specialist. Invoked by mm-story --submit during Phase 1 to perform deep requirement type matching, gap identification, and Sr. PM Sign-off Checklist validation. Produces structured gap analysis with specific PM action items. Use this agent for focused, isolated requirement analysis without loading the full skill context.
 model: claude-sonnet-4-6
 tools:
   - Read

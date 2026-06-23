@@ -1,124 +1,221 @@
 ---
 name: mm-approve-plan
 description: |
-  Reviews and approves PLAN.md sections on GitHub PRs for MM stories. Invoke this skill whenever a PM wants to approve the business scope, a Tech Lead wants to approve the technical approach, someone asks to sign off on a plan, or any stakeholder says "approve this", "I'm happy with the plan", "looks good, approve it", "sign off on Section 2", or "request changes on the plan". Always confirms who to assign as reviewers — multiple people per role are supported. Never posts to GitHub without explicit confirmation.
+  Reviews and approves PLAN.md sections on GitHub PRs for MM stories. Use --pm for PM reviewing Section 1 (business scope), --tech for Tech Lead reviewing Section 2 (technical approach). Invoke whenever a PM or Tech Lead wants to approve, request changes, or review the plan — even casual phrases like "I'm happy with it", "LGTM", "looks good", "I have concerns". Never posts to GitHub without explicit confirmation. Self-learns user preferences to reduce repeated friction.
 command: mm-approve-plan
 trigger: |
-  - "approve this plan", "approve the PLAN.md", "sign off on the plan"
-  - "approve Section 1", "approve Section 2", "approve the technical approach"
-  - "I'm happy with this", "looks good, approve it", "LGTM"
+  - "approve this plan", "approve Section 1", "approve Section 2"
+  - "I'm happy with this", "LGTM", "looks good, approve it"
   - "request changes", "I have concerns about the plan"
   - PM or Tech Lead wants to post a formal review on a PLAN.md PR
-  - Claude detects approval or review intent on a PLAN.md artifact
 kind: skill
 visibility: project
 ---
 
-## INTERACTION PROTOCOL
+## Memory
 
-**Identify the caller (run once at start):**
-```bash
-git config user.email
-```
-Look up the email in `MM/Knowledge_Base/personas.md`. If found, greet by first name and store USER_NAME / USER_ROLE. If not found, present once:
-```
-I don't recognise [email] in personas.md. Who are you?
-  [1] PM / Product Manager    [2] Developer
-  [3] Tech Lead               [4] QA Engineer
-  [5] Skip — continue anonymously
-```
-Role adjusts greeting only — it **never blocks anyone from approving or reviewing**.
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
 
-**All choices and approvals use numbered options.** Never present a gate as `(yes / no)`. Standard formats:
-- Section approve: `[1] Approve  [2] Request changes  [3] Cancel`
-- Post to GitHub: `[1] Post review now  [2] Edit comment first  [3] Cancel`
-- Notification: `[1] Send now  [2] Skip  [3] Edit first`
+Memory location: `~/.claude/skills/mm-approve-plan/memory/`
+
+Run M0 → M2 at start. Run M3 → M5 at end.
 
 ---
 
-## What This Does
+## Interaction Protocol
 
-Reads the PLAN.md on the feature branch PR, presents a clear summary of the relevant section, and posts a formal GitHub PR review after explicit confirmation. PM approves Section 1. Tech Lead approves Section 2. Both must approve before Phase 3 unlocks.
-
-## Step 1: Find the PR
-
-Use GitHub connector to find the open PR:
+**Identify caller** (M0):
+```bash
+git config user.email
 ```
-Find PR for branch: feature/[Epic_ID]_[Story_ID]
+Look up in `MM/Knowledge_Base/personas.md`. Greet by name if found.
+
+**All choices use numbered options.**
+
+---
+
+## Flag Routing
+
+| Invocation | Mode |
+|-----------|------|
+| `/mm-approve-plan --pm [Epic_ID] [Story_ID]` | PM reviews Section 1 (business scope) |
+| `/mm-approve-plan --tech [Epic_ID] [Story_ID]` | Tech Lead reviews Section 2 (technical approach) |
+| `/mm-approve-plan [Epic_ID] [Story_ID]` | Auto-detect from caller's role in personas.md |
+
+**Auto-detect role** (when no flag): read `MM/Knowledge_Base/personas.md` for caller's role:
+- PM / Product Manager → `--pm` mode
+- Tech Lead / Engineering Manager → `--tech` mode
+- Unknown → ask:
+  ```
+  Which section are you reviewing?
+    [1] Section 1 — PM Business Scope (I'm a PM)
+    [2] Section 2 — Technical Approach (I'm a Tech Lead)
+  ```
+
+---
+
+## STEP 0: DOMAIN GUARD
+
+Valid prefix: `MM-` only. Stop for any other domain.
+
+---
+
+## STEP 1: FIND THE PR
+
+```bash
+cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+git fetch origin
 ```
 
-If no PR found → instruct user to run `/mm-blueprint` first.
+Find open PR for `feature/[Epic_ID]_[Story_ID]` via GitHub MCP.
 
-## Step 2: Determine Section
-
-Ask if not clear from context:
+If no PR found:
 ```
-Which section are you reviewing?
-  1 — PM Business Scope (ACs, out-of-scope, demo gate)
-  2 — Technical/Code Changes (services, interfaces, files)
-  both — all sections
+No open PR found for feature/[Epic_ID]_[Story_ID].
+The developer needs to run /mm-blueprint first to generate PLAN.md and raise the PR.
 ```
 
-## Step 3: Present Summary
+Read `PLAN.md` from the PR branch.
 
-**Section 1 (PM):**
+---
+
+## MODE: --pm (Section 1 — PM Business Scope)
+
+Present a clear summary of what the PM is approving:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PLAN.md SECTION 1 — BUSINESS SCOPE  |  PR #[N]
+Story: [Story_ID]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Story Summary:    [1 sentence]
-ACs (binding):    [N] — [list]
-Out of Scope:     [list]
-Demo Gate:        [validators] | [dataset] | [pass criterion]
+Story Summary:  [1 sentence]
+ACs (binding):  [N] — [numbered list]
+Out of Scope:   [list]
+Edge Cases:     [list]
+Demo Gate:      [validators] | [dataset] | [pass criterion]
 
+CHECK:
   ✅/❌ ACs match original story
-  ✅/❌ Out-of-scope is explicit
+  ✅/❌ Out-of-scope is explicitly listed
   ✅/❌ Demo Gate: named person + specific dataset + number
 
-Overall: [READY TO APPROVE | CONCERNS below]
+OVERALL: [READY TO APPROVE | CONCERNS — see below]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [1] Approve Section 1     [2] Request changes     [3] Cancel
+  [1] Approve Section 1
+  [2] Request changes — I'll describe what to fix
+  [3] Cancel
 ```
 
-**Section 2 (Tech Lead):**
+---
+
+## MODE: --tech (Section 2 — Technical Approach)
+
+Present a clear summary of what the Tech Lead is approving:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PLAN.md SECTION 2 — TECHNICAL APPROACH  |  PR #[N]
+Story: [Story_ID]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Services in scope:   [list]
-Interface changes:   [N] — [summary]
+Services in scope:   [list with change type]
+Interface changes:   [N] — [endpoint → consumers affected]
 Call chain:          [upstream → service → downstream]
-Files to change:     [N] — [Create/Modify/Delete]
+Files to change:     [N] — [Create/Modify/Delete list]
 Complexity:          [Low/Medium/High]
 Compliance flag:     [YES — OBS-XX | NO]
 
+CHECK:
   ✅/❌ All consumers of changed interfaces listed
-  ✅/❌ Call chain complete
-  ✅/❌ File list specific (actual paths)
+  ✅/❌ Call chain complete (no missing hops)
+  ✅/❌ File paths specific (not "relevant files")
   ✅/❌ Complexity matches change surface
-  ✅/❌ OBS reference present (if regulated)
+  ✅/❌ OBS reference present (if MIGRATION or regulated area)
 
-Overall: [READY TO APPROVE | CONCERNS below]
+OVERALL: [READY TO APPROVE | CONCERNS — see below]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [1] Approve Section 2     [2] Request changes     [3] Cancel
+  [1] Approve Section 2
+  [2] Request changes — I'll describe what to fix
+  [3] Cancel
 ```
 
-## Step 4: Post Review
+---
 
-Only after **[1] Approve**:
+## STEP 2: POST REVIEW TO GITHUB
 
-**Approving:**
-- Post APPROVED review via GitHub connector
-- Ask: "Who should I notify on Slack? List names — multiple people per role are fine."
-- Send Slack notification to named people only
+**On [1] Approve:**
 
-**Requesting changes:**
-- Ask: "What specific changes are needed?"
-- Post CHANGES_REQUESTED with those comments
-- Ask: "Who should be notified on Slack?"
+Show exactly what will be posted before sending:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  APPROVAL REQUIRED — Post GitHub Review
+PR: #[N] | Action: APPROVE
 
-**Reviewer assignment:** If adding reviewers to the PR, always ask: "Are there other reviewers to add? Please list their GitHub handles — multiple people can hold the same role."
+Comment to post:
+"Section [1|2] approved ✅
+[One sentence summary of what was reviewed]
+[Any notes or conditions if applicable]"
 
-## Gate Reminder
+  [1] Post approval now    [2] Edit comment first    [3] Cancel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-Both PM (Section 1) and Tech Lead (Section 2) must approve before the PR can merge. GitHub branch protection enforces this. Phase 3 only starts after merge.
+After posting, ask about Slack notification:
+```
+Notify anyone on Slack?
+  [1] Yes — I'll name them    [2] Skip
+```
+Send only to people explicitly named. Never assume recipients.
+
+**On [2] Request changes:**
+
+Ask what specifically needs to change:
+```
+What changes are needed? (describe in plain English)
+→
+```
+
+Show the review comment before posting:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  APPROVAL REQUIRED — Post GitHub Review
+PR: #[N] | Action: REQUEST CHANGES
+
+Comment to post:
+"Section [1|2] — changes requested:
+[user's description formatted clearly]"
+
+  [1] Post this    [2] Edit first    [3] Cancel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## STEP 3: GATE STATUS
+
+After posting, print current gate status so everyone knows what's left:
+
+```
+PR #[N] — feature/[Epic_ID]_[Story_ID] → main
+
+  Section 1 (PM):        [✅ Approved by [name] | ⏳ Pending | ❌ Changes requested]
+  Section 2 (Tech Lead): [✅ Approved by [name] | ⏳ Pending | ❌ Changes requested]
+
+  [If both approved]:
+    Both sections approved. PR is ready to merge.
+    After merge → developer runs /mm-tdd to begin Phase 3.
+
+  [If pending or changes requested]:
+    Merge is blocked until both approve.
+```
+
+---
+
+## Error Handling
+
+| Situation | Action |
+|-----------|--------|
+| No open PR | Tell user to run /mm-blueprint first |
+| PLAN.md not found on PR branch | Tell user PLAN.md hasn't been generated yet |
+| GitHub MCP unavailable | Show review summary in terminal, instruct user to post manually |
+| Role not in personas.md | Ask which section they're reviewing |
+| User declines posting | Note their concerns, offer to help draft the comment |

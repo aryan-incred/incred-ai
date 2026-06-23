@@ -12,6 +12,21 @@ kind: skill
 visibility: project
 ---
 
+## Memory
+
+Follows shared memory protocol: `~/.claude/skills/shared/memory-protocol.md`
+
+Memory location: `~/.claude/skills/mm-status/memory/`
+
+Run M0 → M2 at start. Run M3 → M5 at end.
+(Read-only skill — M3/M5 only log which story was checked and what phase it was at.)
+
+Key things to learn:
+- Which story the user checks most frequently → surface it first when no params given
+- Does GitHub MCP always fail for this user → skip the PR check, use local file detection only
+
+---
+
 ## INTERACTION PROTOCOL
 
 **Identify the caller (run once at start):**
