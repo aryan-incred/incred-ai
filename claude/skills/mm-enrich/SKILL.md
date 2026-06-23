@@ -120,8 +120,11 @@ HOW DO I ENRICH?
                         Saves a confirmed RESOLVE-IN-PLAN value
                         from an active story
 
-  ENRICH A PRFAQ:       /mm-enrich --prfaq
-                        Routes to MM/PRFAQs/ instead of Knowledge_Base/
+  CREATE A PRFAQ:       /mm-enrich --prfaq
+                        Guided Working Backwards creation — press release,
+                        named user, FAQs, assigns PRFAQ ID, updates index.
+                        Also: /mm-enrich --prfaq MM-PRFAQ-3  (update existing)
+                              /mm-enrich --prfaq --slack [url]  (pre-fill from thread)
 
   RETROSPECTIVE:        /mm-enrich --retro [Epic_ID]
                         Routes to Knowledge_Base/retrospectives/
@@ -242,8 +245,281 @@ If match found:
 | `--email [id]` | Gmail MCP `get_thread` — full chain, chronological |
 | `--file [path]` | Read file directly; if unreadable ask user to paste sections |
 | `--resolve [Epic] [Story]` | Skip to STEP 3 — value already confirmed |
-| `--prfaq` | Fetch then route to `MM/PRFAQs/` |
+| `--prfaq` | → branch to **MODE: --prfaq** below |
 | `--retro [Epic_ID]` | Fetch then route to `Knowledge_Base/retrospectives/[Epic_ID].md` |
+
+---
+
+## MODE: --prfaq
+
+*Guided PRFAQ creation or update. Produces a structured Working Backwards document in `MM/PRFAQs/`.*
+
+**Invocations:**
+
+| Command | Behaviour |
+|---------|-----------|
+| `/mm-enrich --prfaq` | Guided blank-slate creation |
+| `/mm-enrich --prfaq MM-PRFAQ-3` | Update an existing PRFAQ by ID |
+| `/mm-enrich --prfaq --slack [url]` | Pre-fill from Slack thread, then guided creation |
+| `/mm-enrich --prfaq --email [id]` | Pre-fill from email thread, then guided creation |
+| `/mm-enrich --prfaq --file [path]` | Pre-fill from a file, then guided creation |
+
+---
+
+### P0: New or Update?
+
+Read `MM/PRFAQs/INDEX.md`. If an ID was passed as argument → jump to **Update Mode**.
+
+Otherwise show existing PRFAQs and ask:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MM PRFAQs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Existing:
+  [list rows from INDEX.md, or "None yet — this will be MM-PRFAQ-001"]
+
+  [1] Create a new PRFAQ
+  [2] Update an existing PRFAQ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### P1: Assign ID + Title
+
+Scan `PRFAQs/INDEX.md` for the highest N. Next ID = N+1. First ever = `MM-PRFAQ-001`.
+
+If a source flag was provided (`--slack`, `--email`, `--file`) → fetch it now and extract initiative signals (title, problem, outcome mentions). Tell the PM what was found:
+
+```
+Found context from [source]:
+  Initiative signals: [extracted title/problem/outcome]
+
+I'll pre-fill sections from this. You review and edit each one.
+  [1] Continue with pre-fill    [2] Start blank
+```
+
+Ask for the short title:
+```
+Short initiative name (2–4 words) — becomes part of the filename.
+
+Example: "Real-Time Payment Status", "Bulk Disbursement V2", "NACH Retry Rework"
+```
+
+Slugify for filename (spaces → hyphens). E.g. `MM-PRFAQ-003-NACHRetryRework.md`
+
+---
+
+### P2: Press Release — One Section at a Time
+
+Work conversationally. Show one section, draft it (or prompt if blank), get approval, move on.
+
+**Headline**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRESS RELEASE — Headline  (1 of 4)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write as if this already shipped. User outcome, not technology.
+
+✅ "InCred Ops can now confirm same-day NEFT settlements before 10am"
+❌ "MM team launches new reconciliation service"
+
+[Show pre-filled draft if source context available]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+Wait for input. Confirm:
+```
+  [1] Use this    [2] Edit    [3] Skip (fill later)
+```
+
+**Named User + Before/After**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRESS RELEASE — Named User  (2 of 4)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name a specific person and what changed for them.
+"Users" is not specific enough.
+
+Example:
+  Kavita (Ops, InCred Pune) can now confirm whether a ₹2.4L NEFT
+  settled by 11am the same day — instead of waiting until end-of-day.
+
+Who is the named user? What can they do now that they couldn't before?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**How It Works + Business Impact**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRESS RELEASE — Body  (3 of 4)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Two short paragraphs:
+  Para 1: how it works at a high level (no technical detail)
+  Para 2: business impact — numbers wherever possible
+
+Unknown numbers → use placeholder: "[TARGET: reduce from X to Y]"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Stakeholder Quote**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRESS RELEASE — Quote  (4 of 4)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A quote from a named real person (PM, ops lead, business head).
+Business terms only — not technical.
+
+✅ "We used to chase payment confirmations all morning.
+    Now Kavita has her answer before standup." — Ritika Agrawal, PM
+❌ "We optimised the reconciliation API throughput."
+
+Who should be quoted? What would they say?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### P3: FAQs
+
+**External FAQs** (questions a borrower, partner, or regulator would ask):
+
+Draft 3 from the initiative context. Show them all at once:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXTERNAL FAQs — draft
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Q1: [drafted]   A: [drafted]
+Q2: [drafted]   A: [drafted]
+Q3: [drafted]   A: [drafted]
+
+  [1] Use these    [2] Edit one    [3] Add more    [4] Skip
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Internal FAQs** — always include these 5; pre-fill from context where possible:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INTERNAL FAQs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Q: How does this affect existing payment flows?
+A: [draft or TBD]
+
+Q: What are the compliance implications?
+A: [flag KYC/AML/RBI if applicable, else "No compliance impact identified"]
+
+Q: What's the rollback plan if something goes wrong?
+A: [TBD — developer confirms at Phase 2]
+
+Q: What does success look like at 30/60/90 days?
+A: 30d: [metric]   60d: [metric]   90d: [metric]
+
+Q: Which teams are affected?
+A: [list from context]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1] Use these    [2] Edit a specific FAQ    [3] Skip
+```
+
+---
+
+### P4: Full Preview + Approval
+
+Assemble everything into the final file format. Show it in full:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRFAQ PREVIEW — MM-PRFAQ-[N]-[ShortTitle].md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[full assembled content]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1] Save this PRFAQ
+  [2] Edit a section  (say which: "headline", "quote", "internal faqs", etc.)
+  [3] Start over
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+On `[2]` → apply edit, re-show full preview. Loop until `[1]`.
+
+---
+
+### P5: Write + Update INDEX
+
+Write `MM/PRFAQs/MM-PRFAQ-[N]-[ShortTitle].md`.
+
+Append a row to `MM/PRFAQs/INDEX.md`:
+```
+| MM-PRFAQ-[N] | [Title] | Draft | — | [Author] | [Date] |
+```
+
+---
+
+### P6: Commit Gate
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  APPROVAL REQUIRED — Commit PRFAQ
+
+  MM/PRFAQs/MM-PRFAQ-[N]-[ShortTitle].md   [NEW]
+  MM/PRFAQs/INDEX.md                        [UPDATED]
+
+  [1] Commit to main
+  [2] Commit to current branch
+  [3] Skip commit (files saved locally only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+```bash
+git add MM/PRFAQs/
+git commit -m "prfaq: add MM-PRFAQ-[N] [ShortTitle] — [Author]"
+git push origin [branch]
+```
+
+---
+
+### P7: Sign-Off
+
+```
+✅ PRFAQ CREATED — MM-PRFAQ-[N]-[ShortTitle].md
+
+  Status: Draft
+  File:   MM/PRFAQs/MM-PRFAQ-[N]-[ShortTitle].md
+  Index:  MM/PRFAQs/INDEX.md ✅
+
+NEXT:
+  Share for review  → update status to "Under Review"
+  Get approved      → /mm-enrich --prfaq MM-PRFAQ-[N]  (change status)
+  Write stories     → /mm-story  (reference this PRFAQ ID in the epic)
+```
+
+---
+
+### Update Mode
+
+When `/mm-enrich --prfaq MM-PRFAQ-[N]` is run:
+
+Read the file. Show current status + which sections have TBD gaps:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MM-PRFAQ-[N] — [Title]  (Status: Draft)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sections:
+  Press Release   ✅
+  External FAQs   ✅
+  Internal FAQs   ⚠️  2 TBD answers remain
+  Linked Epics    ✅  MM-Epic-1, MM-Epic-2
+
+  [1] Fill in TBD gaps
+  [2] Edit press release
+  [3] Edit FAQs
+  [4] Change status  (Draft → Under Review → Approved → Superseded)
+  [5] Add linked epic
+  [6] Update from source  (--slack / --email / --file)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Apply change → show diff → approval gate → commit.
 
 ---
 
