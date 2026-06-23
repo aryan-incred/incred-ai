@@ -86,7 +86,7 @@ Valid prefix: `MM-` only. Reject any other domain prefix with no side effects.
 ## STEP 1: LOAD SERVICE CONFIG
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout main && git pull origin main
 ```
 

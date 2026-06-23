@@ -70,7 +70,7 @@ The reason TDD is enforced here: in a multi-service architecture, writing tests 
 3. No production code written during Phase 3 — tests only
 4. Never auto-invoke Phase 5 (`/mm-ship`) — present it as an option after Green phase
 
-**PM monorepo:** `/Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo/`
+**PM monorepo:** resolved at runtime via `git rev-parse --show-toplevel` (run this skill from inside the monorepo)
 
 **Invocation:**
 - With params: `/mm-tdd MM-Epic-5 MM-Epic-5-Story-3A`
@@ -118,7 +118,7 @@ If PLAN.md is still pending → instruct user to get the Phase 2 PR approved and
 Pull latest main from PM monorepo and read the approved PLAN.md:
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout main && git pull origin main
 ```
 

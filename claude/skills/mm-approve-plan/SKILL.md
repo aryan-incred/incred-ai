@@ -63,7 +63,7 @@ Valid prefix: `MM-` only. Stop for any other domain.
 ## STEP 1: FIND THE PR
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git fetch origin
 ```
 

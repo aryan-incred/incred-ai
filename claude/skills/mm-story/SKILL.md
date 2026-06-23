@@ -153,7 +153,7 @@ Nothing was read or changed.
 ## STEP 1: SYNC MONOREPO
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout main && git pull origin main
 ```
 

@@ -8,8 +8,11 @@ description: Merges multiple service SERVICE-KB.md files into a unified domain k
 Synthesizes per-service `.service-kb/index.json` files into a domain-level common knowledge base.
 
 Architecture references (read as needed):
-- Service registry: `/Users/aryankumarmaurya/Incred-Engineers/architecture/registry/services.yaml`
-- Bounded contexts: `/Users/aryankumarmaurya/Incred-Engineers/architecture/registry/bounded-contexts.yaml`
+```bash
+ARCH_ROOT="$HOME/Incred-Engineers/architecture"
+```
+- Service registry: `$ARCH_ROOT/registry/services.yaml`
+- Bounded contexts: `$ARCH_ROOT/registry/bounded-contexts.yaml`
 
 ---
 

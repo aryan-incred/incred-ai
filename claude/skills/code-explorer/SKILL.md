@@ -8,10 +8,16 @@ description: Explores any InCred microservice and produces a SERVICE-KB.md knowl
 Produces `SERVICE-KB.md` for the service in the current working directory.
 
 Architecture references (read as needed, do not load upfront):
-- Registry: `/Users/aryankumarmaurya/Incred-Engineers/architecture/registry/services.yaml`
-- Bounded contexts: `/Users/aryankumarmaurya/Incred-Engineers/architecture/registry/bounded-contexts.yaml`
-- KB format guide: `/Users/aryankumarmaurya/Incred-Engineers/architecture/Build-Agent/guideline-for-creatiung-kb.md`
-- Vendors: `/Users/aryankumarmaurya/Incred-Engineers/architecture/external-service-providers.md`
+
+Resolve `ARCH_ROOT` once at start of Phase 1:
+```bash
+ARCH_ROOT="$HOME/Incred-Engineers/architecture"
+```
+
+- Registry: `$ARCH_ROOT/registry/services.yaml`
+- Bounded contexts: `$ARCH_ROOT/registry/bounded-contexts.yaml`
+- KB format guide: `$ARCH_ROOT/Build-Agent/guideline-for-creatiung-kb.md`
+- Vendors: `$ARCH_ROOT/external-service-providers.md`
 
 ---
 
@@ -55,7 +61,7 @@ Store:
 Read the service registry to get declared metadata before any GitNexus call:
 
 ```bash
-grep -A 20 "id: <SERVICE_NAME>" /Users/aryankumarmaurya/Incred-Engineers/architecture/registry/services.yaml
+grep -A 20 "id: <SERVICE_NAME>" "$ARCH_ROOT/registry/services.yaml"
 ```
 
 If found, extract and store:
@@ -75,7 +81,7 @@ If not found in registry, note as a gap: "Service not yet registered in services
 
 Then get the enforcement rules for this service's bounded context:
 ```bash
-grep -A 30 "id: <BOUNDED_CONTEXT>" /Users/aryankumarmaurya/Incred-Engineers/architecture/registry/bounded-contexts.yaml
+grep -A 30 "id: <BOUNDED_CONTEXT>" "$ARCH_ROOT/registry/bounded-contexts.yaml"
 ```
 
 Store enforcement rules — these become Key Invariants in the KB.
@@ -378,7 +384,7 @@ Create `<SERVICE_ROOT>/.service-kb/index.json` — machine-readable summary for 
   "explorer_version": "1.0",
   "team": "<from services.yaml or null>",
   "repo_path": "<SERVICE_ROOT>",
-  "architecture_doc": "/Users/aryankumarmaurya/Incred-Engineers/architecture/<doc_path from registry>",
+  "architecture_doc": "$ARCH_ROOT/<doc_path from registry>",
   "migration_status": null,
   "monolith_dependency": null,
   "db_access_pattern": "<http_requesttype | dbc_named_endpoint | sdk_direct | mixed | unknown>",

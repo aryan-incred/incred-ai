@@ -114,7 +114,7 @@ If any environment is not yet passed → stop, show which environment is missing
 Read all evidence files and compute the metrics package:
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout main && git pull origin main
 ```
 

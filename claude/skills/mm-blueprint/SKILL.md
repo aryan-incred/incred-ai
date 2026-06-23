@@ -67,7 +67,7 @@ This skill reads the validated story from the feature branch, traces code impact
 
 The reason for this gate: in a multi-service architecture, an under-specified technical plan causes scope creep mid-implementation, broken service contracts, and expensive backtracking. The PLAN.md is the binding contract that prevents all of that — so it must be human-reviewed before any code is written.
 
-**Monorepo local path:** `/Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo/`
+**Monorepo local path:** resolved at runtime via `git rev-parse --show-toplevel` (run this skill from inside the monorepo)
 
 **Invocation:**
 - Normal mode: `/mm-blueprint MM-Epic-5 MM-Epic-5-Story-3A`
@@ -116,7 +116,7 @@ If the feature branch doesn't exist → instruct user to run `/mm-analyze` first
 Check out the feature branch:
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout feature/[Epic_ID]_[Story_ID]
 git pull origin feature/[Epic_ID]_[Story_ID] 2>/dev/null || true
 ```

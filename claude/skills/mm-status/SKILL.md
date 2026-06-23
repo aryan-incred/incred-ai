@@ -52,7 +52,7 @@ A lightweight read-only pipeline inspector. It reads the PM monorepo and reports
 ## STEP 1: DISCOVER STORIES (if no params given)
 
 ```bash
-cd /Users/aryankumarmaurya/Incred-Engineers/InCred-Product-PRFAQ-Epic-Stories-Artefacts-MonoRepo
+cd "$(git rev-parse --show-toplevel)"
 git checkout main && git pull origin main
 
 # Find all active story directories
